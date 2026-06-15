@@ -9,7 +9,7 @@ interface HomeProps {
 }
 
 export default function Home({ onStartWizard, onStartCompare, onStartContract }: HomeProps) {
-  const [hoveredNode, setHoveredNode] = React.useState<'none' | 'banking' | 'incoterms' | 'sustainability'>('none');
+  const [hoveredNode, setHoveredNode] = React.useState<'none' | 'banking' | 'incoterms' | 'sustainability' | 'central'>('none');
 
   return (
     <div className="flex flex-col w-full">
@@ -65,9 +65,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 Contract Auditor
               </button>
             </div>
-          </motion.div>
-
-          <motion.div 
+          </motion.div>          <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -95,9 +93,13 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 {/* SVG Connecting Lines Layer */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 500 450" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
-                    <linearGradient id="banking-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.8" />
+                    <linearGradient id="incoterms-grad" x1="50%" y1="100%" x2="50%" y2="0%">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#34d399" stopOpacity="0.2" />
+                    </linearGradient>
+                    <linearGradient id="banking-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
                     </linearGradient>
                     <linearGradient id="sustain-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
@@ -110,70 +112,84 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                   </defs>
 
                   {/* Central Glow */}
-                  <circle cx="250" cy="225" r="120" fill="url(#glow-center)" />
+                  <circle cx="250" cy="235" r="110" fill="url(#glow-center)" />
 
-                  {/* Connection Line 1: Banking to Incoterms */}
+                  {/* Connection Line 1: Center to Incoterms Analysis (Top-Center) */}
                   <path 
-                    d="M 120 120 Q 150 170 250 225" 
+                    d="M 250 235 L 250 115" 
+                    stroke={hoveredNode === 'incoterms' ? '#34d399' : '#334155'} 
+                    strokeWidth={hoveredNode === 'incoterms' ? '4' : '2'} 
+                    className="transition-all duration-300"
+                  />
+                  <path 
+                    d="M 250 235 L 250 115" 
+                    stroke="url(#incoterms-grad)" 
+                    strokeWidth="3" 
+                    strokeDasharray="8 12" 
+                    className="animate-flow-right opacity-80"
+                  />
+
+                  {/* Connection Line 2: Center to Banking Docs (Bottom-Left) */}
+                  <path 
+                    d="M 250 235 L 114 340" 
                     stroke={hoveredNode === 'banking' ? '#60a5fa' : '#334155'} 
                     strokeWidth={hoveredNode === 'banking' ? '4' : '2'} 
                     className="transition-all duration-300"
                   />
-                  {/* Glowing Flow for Banking */}
                   <path 
-                    d="M 120 120 Q 150 170 250 225" 
+                    d="M 250 235 L 114 340" 
                     stroke="url(#banking-grad)" 
-                    strokeWidth="4" 
-                    strokeDasharray="10 15" 
-                    className="animate-flow-right opacity-80"
+                    strokeWidth="3" 
+                    strokeDasharray="8 12" 
+                    className="animate-flow-left opacity-80"
                   />
 
-                  {/* Connection Line 2: Incoterms to Sustainability */}
+                  {/* Connection Line 3: Center to Sustainability (Bottom-Right) */}
                   <path 
-                    d="M 250 225 Q 350 280 380 330" 
+                    d="M 250 235 L 386 340" 
                     stroke={hoveredNode === 'sustainability' ? '#a5b4fc' : '#334155'} 
                     strokeWidth={hoveredNode === 'sustainability' ? '4' : '2'} 
                     className="transition-all duration-300"
                   />
-                  {/* Glowing Flow for Sustainability */}
                   <path 
-                    d="M 250 225 Q 350 280 380 330" 
+                    d="M 250 235 L 386 340" 
                     stroke="url(#sustain-grad)" 
-                    strokeWidth="4" 
-                    strokeDasharray="10 15" 
-                    className="animate-flow-left opacity-80"
+                    strokeWidth="3" 
+                    strokeDasharray="8 12" 
+                    className="animate-flow-right opacity-80"
                   />
                 </svg>
 
                 {/* Nodes layout absolute positions */}
                 
-                {/* 1. Banking Docs & UCP 600 Node (Top-Left) */}
+                {/* 1. Incoterms Analysis Node (Top-Center) */}
                 <div 
-                  style={{ left: '10%', top: '10%' }}
-                  className={`absolute w-[200px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border ${
-                    hoveredNode === 'banking' 
-                      ? 'bg-blue-950/50 border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] scale-105' 
+                  style={{ left: '50%', top: '6%' }}
+                  className={`absolute -translate-x-1/2 w-[250px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border text-center ${
+                    hoveredNode === 'incoterms' 
+                      ? 'bg-emerald-950/60 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105' 
                       : 'bg-slate-900/40 border-white/10 hover:border-white/20'
                   }`}
-                  onMouseEnter={() => setHoveredNode('banking')}
+                  onMouseEnter={() => setHoveredNode('incoterms')}
                   onMouseLeave={() => setHoveredNode('none')}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold">📜</span>
-                    <h4 className="text-white font-bold text-xs">Banking Docs & UCP 600</h4>
+                  <div className="flex items-center justify-center gap-2 mb-1.5">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs">📊</span>
+                    <h4 className="text-white font-black text-xs">Incoterms Analysis</h4>
                   </div>
-                  <p className="text-slate-400 text-[10px] leading-relaxed">
-                    Review Letter of Credit terms and align commercial shipping documents with banking regulations.
+                  <p className="text-slate-300 text-[10px] leading-relaxed font-semibold">
+                    Define responsibilities, allocate supply chain costs, and pinpoint transit risk handovers.
                   </p>
+                  <span className="text-[9px] text-slate-500 font-bold block mt-1">Obligations & Costs</span>
                 </div>
 
-                {/* 2. Central Incoterms® 2020 Node */}
+                {/* 2. Central Node: Correct Incoterms Selection */}
                 <div 
-                  style={{ left: '50%', top: '50%' }}
+                  style={{ left: '50%', top: '53%' }}
                   className={`absolute -translate-x-1/2 -translate-y-1/2 z-30 transition-all duration-300 ${
-                    hoveredNode === 'incoterms' ? 'scale-110' : ''
+                    hoveredNode === 'central' ? 'scale-110' : ''
                   }`}
-                  onMouseEnter={() => setHoveredNode('incoterms')}
+                  onMouseEnter={() => setHoveredNode('central')}
                   onMouseLeave={() => setHoveredNode('none')}
                 >
                   {/* Glowing Aura Rings */}
@@ -181,35 +197,55 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                   <div className="absolute inset-0 -m-3 rounded-full border border-emerald-500/20 animate-pulse pointer-events-none" />
                   
                   {/* Central Button / Ring */}
-                  <div className="w-32 h-32 rounded-full bg-slate-900 border-2 border-emerald-500 flex flex-col items-center justify-center text-center p-3 shadow-[0_0_35px_rgba(16,185,129,0.3)] transition-all">
-                    <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-widest mb-1">Standard Core</span>
-                    <span className="text-white font-black text-sm tracking-tight leading-none uppercase">Incoterms®</span>
-                    <span className="text-emerald-500 font-black text-sm tracking-tight leading-none">2020</span>
-                    <span className="text-[9px] text-slate-400 font-medium mt-1">Rule Center</span>
+                  <div className="w-36 h-36 rounded-full bg-slate-900 border-2 border-emerald-500 flex flex-col items-center justify-center text-center p-4 shadow-[0_0_35px_rgba(16,185,129,0.3)] transition-all">
+                    <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest mb-1">ICC 2020 RULES</span>
+                    <span className="text-white font-black text-xs tracking-tight leading-normal uppercase">Correct Selection</span>
+                    <span className="text-emerald-500 font-black text-sm tracking-tight leading-none">Incoterms®</span>
+                    <span className="text-[9px] text-slate-400 font-bold mt-1.5">Rule Core Link</span>
                   </div>
                 </div>
 
-                {/* 3. Sustainability & CO2 Node (Bottom-Right) */}
+                {/* 3. Banking Docs Analysis Node (Bottom-Left) */}
                 <div 
-                  style={{ right: '10%', bottom: '10%' }}
-                  className={`absolute w-[200px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border ${
+                  style={{ left: '4%', bottom: '8%' }}
+                  className={`absolute w-[220px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border text-left ${
+                    hoveredNode === 'banking' 
+                      ? 'bg-blue-950/60 border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] scale-105' 
+                      : 'bg-slate-900/40 border-white/10 hover:border-white/20'
+                  }`}
+                  onMouseEnter={() => setHoveredNode('banking')}
+                  onMouseLeave={() => setHoveredNode('none')}
+                >
+                  <div className="flex items-center justify-start gap-2 mb-1.5">
+                    <span className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs">📜</span>
+                    <h4 className="text-white font-black text-xs">Banking Docs Analysis</h4>
+                  </div>
+                  <p className="text-slate-300 text-[10px] leading-relaxed font-semibold">
+                    Review and match shipping documents with Letter of Credit requirements under UCP 600.
+                  </p>
+                  <span className="text-[9px] text-slate-500 font-bold block mt-1">UCP 600 Compliance</span>
+                </div>
+
+                {/* 4. Sustainability Analysis Node (Bottom-Right) */}
+                <div 
+                  style={{ right: '4%', bottom: '8%' }}
+                  className={`absolute w-[220px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border text-left ${
                     hoveredNode === 'sustainability' 
-                      ? 'bg-indigo-950/50 border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.3)] scale-105' 
+                      ? 'bg-indigo-950/60 border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.3)] scale-105' 
                       : 'bg-slate-900/40 border-white/10 hover:border-white/20'
                   }`}
                   onMouseEnter={() => setHoveredNode('sustainability')}
                   onMouseLeave={() => setHoveredNode('none')}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold">🌱</span>
-                    <h4 className="text-white font-bold text-xs">Sustainability & CO2</h4>
+                  <div className="flex items-center justify-start gap-2 mb-1.5">
+                    <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs">🌱</span>
+                    <h4 className="text-white font-black text-xs">Sustainability Analysis</h4>
                   </div>
-                  <p className="text-slate-400 text-[10px] leading-relaxed">
-                    Trace, split and optimize your transport emissions carbon footprints dynamically based on terms.
+                  <p className="text-slate-300 text-[10px] leading-relaxed font-semibold">
+                    Determine transport carbon footprint transfer points and report Scope 3 emissions.
                   </p>
+                  <span className="text-[9px] text-slate-500 font-bold block mt-1">ESG & Emission Splits</span>
                 </div>
-
-
              </div>
 
              {/* Decorative Elements */}
