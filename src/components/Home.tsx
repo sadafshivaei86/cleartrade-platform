@@ -209,25 +209,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                   </p>
                 </div>
 
-                {/* Footer Insight Box */}
-                <div className="z-20 mt-auto bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-3 relative overflow-hidden backdrop-blur-md">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping absolute top-4 right-4" />
-                  <div className="text-emerald-400 text-lg">💡</div>
-                  <div className="text-left">
-                    <span className="text-white font-bold text-xs block mb-0.5">
-                      {hoveredNode === 'none' && "Interactive Diagram Map"}
-                      {hoveredNode === 'banking' && "Connected via UCP 600 Rules"}
-                      {hoveredNode === 'incoterms' && "Commercial Term Core Hub"}
-                      {hoveredNode === 'sustainability' && "ESG Scope 3 Carbon Split Integration"}
-                    </span>
-                    <span className="text-slate-400 text-[10px] leading-relaxed block">
-                      {hoveredNode === 'none' && "Hover individual nodes to check relationships and examine global compliance routes."}
-                      {hoveredNode === 'banking' && "Incoterms dictate who handles transport docs. Banks review them under UCP 600 to trigger money release."}
-                      {hoveredNode === 'incoterms' && "The central rule engine that links shipping operations, compliance budgets, and liability risks."}
-                      {hoveredNode === 'sustainability' && "Incoterms split emissions responsibility. Selecting correct terms assigns ESG Scope 3 metrics safely."}
-                    </span>
-                  </div>
-                </div>
+
              </div>
 
              {/* Decorative Elements */}

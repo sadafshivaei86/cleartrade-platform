@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   FileText, Upload, Sparkles, RefreshCcw, CheckCircle2, 
   XCircle, AlertTriangle, ShieldCheck, Leaf, Globe, 
-  Coins, Download, ArrowRight, CornerDownRight, FileEdit, HelpCircle
+  Coins, Download, ArrowRight, CornerDownRight, FileEdit, HelpCircle,
+  Ship, Truck, Warehouse, AlertCircle, Calendar
 } from 'lucide-react';
 
 interface TemplateContract {
@@ -577,6 +578,307 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                   <span className={`px-4 py-2 rounded-xl text-xs font-black ${auditResult.sustainabilityGradeColor}`}>
                     Sustainability Grade: {auditResult.sustainabilityGrade}
                   </span>
+                </div>
+              </div>
+
+              {/* Live Compliance Digital Twin (Interactive Visual Dashboard) */}
+              <div className="bg-slate-950 text-white rounded-[2.5rem] p-6 md:p-8 border border-white/10 space-y-8 relative overflow-hidden shadow-2xl">
+                {/* Decorative background gradients */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6 relative z-10">
+                  <div className="text-left space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
+                      <Sparkles size={10} />
+                      Live Digital Twin Simulation
+                    </div>
+                    <h3 className="text-xl font-black tracking-tight text-white">Three-Pillar Visual Trade Sync Map</h3>
+                    <p className="text-slate-400 text-xs font-semibold">
+                      Real-time visual diagram generated based on detected contract terms ({auditResult?.incoterm?.split(' ')[0]}), showing logistics handover, carbon splits, and documentary finance compliance.
+                    </p>
+                  </div>
+                  <div className="text-[10px] bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl font-mono text-slate-300">
+                    STATUS: SYNCED
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+                  {/* Pillar 1: Cost & Risk Shipping Transfer Map */}
+                  <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 flex flex-col justify-between space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 rounded-lg font-black font-mono">STEP 1</span>
+                        <h4 className="text-sm font-black text-white">Physical Handover Flow</h4>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold">Incoterms® 2020</span>
+                    </div>
+
+                    {/* Shipping Line Diagram */}
+                    <div className="space-y-4 py-2">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                        <span>Origin</span>
+                        <span>Destination</span>
+                      </div>
+
+                      {/* Visual Dots and connectors */}
+                      <div className="relative flex justify-between items-center px-2">
+                        {/* Connecting Line underlay */}
+                        <div className="absolute left-4 right-4 h-1 bg-slate-800 top-1/2 -translate-y-1/2 z-0" />
+                        
+                        {/* Handover flow color representation */}
+                        {auditResult?.incoterm?.includes('EXW') && (
+                          <div className="absolute left-4 w-4 h-1 bg-emerald-500 top-1/2 -translate-y-1/2 z-0" />
+                        )}
+                        {auditResult?.incoterm?.includes('FCA') && (
+                          <div className="absolute left-4 w-1/4 h-1 bg-emerald-500 top-1/2 -translate-y-1/2 z-0" />
+                        )}
+                        {auditResult?.incoterm?.includes('CIF') && (
+                          <div className="absolute left-1/4 w-2/4 h-1 bg-emerald-500 top-1/2 -translate-y-1/2 z-0" />
+                        )}
+
+                        {/* Node 1: Origin Seller Factory */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-semibold text-xs ${
+                            auditResult?.incoterm?.includes('EXW') || auditResult?.incoterm?.includes('FCA') || auditResult?.incoterm?.includes('CIF') ? 'bg-emerald-500 text-white border-emerald-400 font-black' : 'bg-slate-800 text-slate-400 border-slate-750'
+                          }`}>
+                            <Warehouse size={14} />
+                          </div>
+                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Seller</span>
+                        </div>
+
+                        {/* Node 2: Port of Departure */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-semibold text-xs ${
+                            auditResult?.incoterm?.includes('FCA') || auditResult?.incoterm?.includes('CIF') ? 'bg-emerald-500 text-white border-emerald-400 font-black' : 'bg-slate-800 text-slate-400 border-slate-750'
+                          }`}>
+                            <Truck size={14} />
+                          </div>
+                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Export Port</span>
+                        </div>
+
+                        {/* Node 3: Maritime Sea */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-semibold text-xs ${
+                            auditResult?.incoterm?.includes('CIF') ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-slate-800 text-slate-400 border-slate-750'
+                          }`}>
+                            <Ship size={14} />
+                          </div>
+                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Sea Voyage</span>
+                        </div>
+
+                        {/* Node 4: Buyer Port & Warehouse */}
+                        <div className="relative z-10 flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 text-slate-400 border border-slate-700 font-semibold text-xs">
+                            <Warehouse size={14} />
+                          </div>
+                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Buyer</span>
+                        </div>
+                      </div>
+
+                      {/* Detail Labels */}
+                      <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-1.5">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400 font-bold">Risk Handover Point:</span>
+                          <span className="text-emerald-400 font-black">
+                            {auditResult?.incoterm?.includes('EXW') && "At Origin Factory Gate"}
+                            {auditResult?.incoterm?.includes('FCA') && "At Tokyo Container Yard"}
+                            {auditResult?.incoterm?.includes('CIF') && "At Departure Port (Buenos Aires)"}
+                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Specified by Term"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400 font-bold">Freight Booking By:</span>
+                          <span className="text-blue-400 font-black">
+                            {auditResult?.incoterm?.includes('EXW') && "Buyer (EXW)"}
+                            {auditResult?.incoterm?.includes('FCA') && "Buyer (FCA)"}
+                            {auditResult?.incoterm?.includes('CIF') && "Seller (CIF arranges freight)"}
+                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Refer to terms"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Mismatch Banner */}
+                    {auditResult?.incoterm?.includes('CIF') && (
+                      <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl flex items-start gap-2 mt-2">
+                        <span className="text-rose-400 text-xs">⚠️</span>
+                        <p className="text-[10px] text-rose-300 font-semibold leading-relaxed">
+                          <strong>Cost-Risk Swap Override Detected:</strong> Stating the seller remains liable until destination custom clearance conflicts with standard CIF departure risk guidelines. Shifts term effectively to DAP.
+                        </p>
+                      </div>
+                    )}
+                    {auditResult?.incoterm?.includes('EXW') && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl flex items-start gap-2 mt-2">
+                        <span className="text-amber-400 text-xs">💡</span>
+                        <p className="text-[10px] text-slate-300 font-semibold leading-relaxed">
+                          Under standard EXW, Seller holds zero shipping liability. Export customs clearing processes rest 100% on the foreign Buyer.
+                        </p>
+                      </div>
+                    )}
+                    {auditResult?.incoterm?.includes('FCA') && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl flex items-start gap-2 mt-2">
+                        <span className="text-emerald-400 text-xs">✅</span>
+                        <p className="text-[10px] text-slate-300 font-semibold leading-relaxed">
+                          Proper multimodal container term selection. Risk transitions seamlessly to Buyer at departure yard, with local export clearance assigned to seller.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pillar 2: Carbon Split Ledger */}
+                  <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 flex flex-col justify-between space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 rounded-lg font-black font-mono">STEP 2</span>
+                        <h4 className="text-sm font-black text-white">Scope 3 Emission Ledger</h4>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-bold font-mono">CO₂ Split</span>
+                    </div>
+
+                    <div className="space-y-4 py-2">
+                      <div className="flex justify-between items-center text-[10px] font-bold">
+                        <span className="text-slate-400">Seller CO2 Share</span>
+                        <span className="text-slate-400">Buyer CO2 Share</span>
+                      </div>
+
+                      {/* Carbon Progression Split Bar */}
+                      <div className="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden flex">
+                        {auditResult?.incoterm?.includes('EXW') && (
+                          <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: '100%' }} />
+                        )}
+                        {auditResult?.incoterm?.includes('FCA') && (
+                          <>
+                            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: '8%' }} />
+                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: '92%' }} />
+                          </>
+                        )}
+                        {auditResult?.incoterm?.includes('CIF') && (
+                          <>
+                            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: '72%' }} />
+                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: '28%' }} />
+                          </>
+                        )}
+                        {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && (
+                          <>
+                            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: '50%' }} />
+                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: '50%' }} />
+                          </>
+                        )}
+                      </div>
+
+                      {/* Legend and percentage readouts */}
+                      <div className="flex justify-between text-xs font-black">
+                        <div className="flex items-center gap-1.5 text-emerald-400">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" />
+                          <span>
+                            {auditResult?.incoterm?.includes('EXW') && "Seller: 0%"}
+                            {auditResult?.incoterm?.includes('FCA') && "Seller: 8%"}
+                            {auditResult?.incoterm?.includes('CIF') && "Seller: 72%"}
+                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Seller: 50%"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-indigo-400">
+                          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 block" />
+                          <span>
+                            {auditResult?.incoterm?.includes('EXW') && "Buyer: 100%"}
+                            {auditResult?.incoterm?.includes('FCA') && "Buyer: 92%"}
+                            {auditResult?.incoterm?.includes('CIF') && "Buyer: 28%"}
+                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Buyer: 50%"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Green commentary */}
+                      <div className="text-[10px] text-slate-300 font-semibold leading-relaxed bg-white/5 p-3 rounded-xl border border-white/5">
+                        {auditResult?.incoterm?.includes('EXW') && "⚠️ Carbon attribution: Because all transport moves are coordinated from the seller's yard, the buyer assumes 100% of Scope 3 logistics greenhouse footprints."}
+                        {auditResult?.incoterm?.includes('FCA') && "✅ Optimized split: Seller absorbs pre-carriage emissions (8%), while ocean carriage emissions are logged directly by the buyer."}
+                        {auditResult?.incoterm?.includes('CIF') && "⚡ High emission allocation: Exporter manages first-mile & long marine transit (72%). Selecting CIF forces the seller to track and claim carbon footprints."}
+                        {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Emissions splits distribute based on changeover logistics gates of the specified term."}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[10px] text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-3 py-2 rounded-xl">
+                      <Leaf size={12} />
+                      <span className="font-extrabold uppercase font-mono">Scope 3 Split Compliant</span>
+                    </div>
+                  </div>
+
+                  {/* Pillar 3: Bank Doc Validation Matcher */}
+                  <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 flex flex-col justify-between space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 rounded-lg font-black font-mono">STEP 3</span>
+                        <h4 className="text-sm font-black text-white">UCP 600 Bank Doc Matrix</h4>
+                      </div>
+                      <span className="text-[10px] text-indigo-400 font-bold font-mono">L/C Audit</span>
+                    </div>
+
+                    {/* Sync Document Checklist Status */}
+                    <div className="space-y-3.5 py-1">
+                      {/* Doc 1: Invoice */}
+                      <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-2 text-left">
+                          <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
+                          <span className="text-[11px] font-black text-white">Commercial Invoice</span>
+                        </div>
+                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-mono font-black rounded flex-shrink-0">MATCHED</span>
+                      </div>
+
+                      {/* Doc 2: Bill of Lading */}
+                      <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-2 text-left">
+                          {auditResult?.incoterm?.includes('EXW') ? (
+                            <XCircle size={13} className="text-rose-500 flex-shrink-0" />
+                          ) : (
+                            <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
+                          )}
+                          <span className="text-[11px] font-black text-white">Ocean Bill of Lading</span>
+                        </div>
+                        <span className={`px-2 py-0.5 text-[8px] font-mono font-black rounded flex-shrink-0 ${
+                          auditResult?.incoterm?.includes('EXW') ? 'bg-rose-500/20 text-rose-400 animate-pulse' : 'bg-emerald-500/20 text-emerald-400'
+                        }`}>
+                          {auditResult?.incoterm?.includes('EXW') ? "DEADLOCK" : "MATCHED"}
+                        </span>
+                      </div>
+
+                      {/* Doc 3: Insurance Cert */}
+                      <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-2 text-left">
+                          {auditResult?.incoterm?.includes('CIF') ? (
+                            <AlertTriangle size={13} className="text-orange-400 flex-shrink-0" />
+                          ) : auditResult?.incoterm?.includes('EXW') || auditResult?.incoterm?.includes('FCA') ? (
+                            <CheckCircle2 size={13} className="text-slate-500 flex-shrink-0" />
+                          ) : (
+                            <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
+                          )}
+                          <span className="text-[11px] font-black text-white">Marine Insurance Policy</span>
+                        </div>
+                        <span className={`px-2 py-0.5 text-[8px] font-mono font-black rounded flex-shrink-0 ${
+                          auditResult?.incoterm?.includes('CIF') ? 'bg-orange-500/20 text-orange-400 animate-pulse' : 'bg-slate-500/20 text-slate-400'
+                        }`}>
+                          {auditResult?.incoterm?.includes('CIF') ? "LATE SPEC" : "OPTIONAL"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Warning overlay description */}
+                    {auditResult?.incoterm?.includes('CIF') && (
+                      <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-2xl text-[10px] text-orange-200 font-semibold leading-relaxed">
+                        ⚠️ <strong>UCP 600 Art 28 Warning:</strong> Standard banks reject insurance documents dated after the transport loading date. Restating custom 3-day insurance handovers creates compliance refusal.
+                      </div>
+                    )}
+                    {auditResult?.incoterm?.includes('EXW') && (
+                      <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl text-[10px] text-rose-300 font-semibold leading-relaxed animate-pulse">
+                        ❌ <strong>L/C Non-Compliance:</strong> EXW delivery shifts carrier booking completely to Buyer. Seller cannot guarantee clean Carrier-issued Bills of Lading to trigger banks releasing funds.
+                      </div>
+                    )}
+                    {auditResult?.incoterm?.includes('FCA') && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl text-[10px] text-emerald-300 font-semibold leading-relaxed">
+                        ✅ <strong>UCP Compliance Clear:</strong> Documentary presentations align properly under FCA procedures, preventing bank liquidity delays.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
