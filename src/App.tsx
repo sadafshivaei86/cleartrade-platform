@@ -70,13 +70,16 @@ export default function App() {
             <div className="bg-emerald-600 p-1.5 rounded-lg text-white transform group-hover:rotate-12 transition-transform shadow-lg shadow-emerald-200">
               <Globe size={24} fill="currentColor" />
             </div>
-            <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">Green <span className="text-emerald-600">SmartINCO</span></span>
+            <div className="flex flex-col leading-none">
+              <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">Trade<span className="text-emerald-600">Trust</span></span>
+              <span className="text-[10px] font-bold text-slate-500 tracking-normal capitalize mt-0.5">Trade with Confidence</span>
+            </div>
           </div>
           <div className="hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
             <button onClick={goHome} className="hover:text-emerald-600 transition-colors">Intelligence</button>
             <button onClick={startCompare} className={`hover:text-emerald-600 transition-colors ${view === 'compare' ? 'text-emerald-600' : ''}`}>Compare</button>
             <button onClick={startWizard} className={`hover:text-emerald-600 transition-colors ${view === 'wizard' ? 'text-emerald-600' : ''}`}>Analyzer</button>
-            <button onClick={startContract} className={`hover:text-emerald-600 transition-colors ${view === 'contract' ? 'text-emerald-600' : ''}`}>Contract Auditor</button>
+            <button onClick={startContract} className={`hover:text-emerald-600 transition-colors ${view === 'contract' ? 'text-emerald-600' : ''}`}>Review Contract</button>
             <a href="#standards" onClick={(e) => {
               if (view !== 'home') {
                 e.preventDefault();
@@ -216,7 +219,10 @@ export default function App() {
                 <div className="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-900/50">
                   <Globe size={24} fill="currentColor" />
                 </div>
-                <span className="text-2xl font-black tracking-tighter text-white uppercase">Green <span className="text-emerald-600">SmartINCO</span></span>
+                <div className="flex flex-col leading-none">
+                  <span className="text-2xl font-black tracking-tighter text-white uppercase">Trade<span className="text-emerald-600">Trust</span></span>
+                  <span className="text-[10px] font-bold text-slate-400 tracking-normal capitalize mt-0.5">Trade with Confidence</span>
+                </div>
               </div>
               <p className="text-slate-500 max-w-sm font-medium leading-relaxed text-lg">
                 The global benchmark for digital Incoterms® intelligence. Built for modern supply chains.
@@ -242,7 +248,7 @@ export default function App() {
           
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-12 border-t border-white/5">
             <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">
-              © 2026 Green SmartINCO. All rights reserved. Developed by Sadaf Shivaei
+              © 2026 TradeTrust. All rights reserved. Developed by Sadaf Shivaei
             </p>
             <div className="flex gap-10 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">
               <a href="#" className="hover:text-white transition-colors">Terms</a>

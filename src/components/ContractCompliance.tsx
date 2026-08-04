@@ -305,7 +305,7 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                 Smart Green Supply Chain Utilities
               </div>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight" id="auditor-title">
-                Contract Auditor
+                Review Contract
               </h1>
               <p className="text-slate-400 text-sm font-semibold max-w-xl">
                 Automated auditing and compliance validation of international sales contracts against Incoterms® 2020 risk handovers, green logistics (Scope 3), and documentary trade finance guidelines (UCP 600).

@@ -1,6 +1,8 @@
 {
-  "name": "Green SmartINCO",
+  "name": "TradeTrust",
   "description": "Premium Incoterms® 2020 advisor with advanced risk assessment, carbon footprint tracking, and documentation checklists.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

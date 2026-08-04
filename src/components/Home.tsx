@@ -32,37 +32,42 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
             transition={{ duration: 0.8 }}
             className="space-y-8"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600/20 text-emerald-400 rounded-full text-xs font-bold uppercase tracking-widest border border-emerald-500/30 backdrop-blur-md">
-              <ShieldCheck size={14} />
-              Incoterms® 2020 Compliant
+            <div className="flex flex-col gap-2 items-start">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600/20 text-emerald-400 rounded-full text-xs font-bold uppercase tracking-widest border border-emerald-500/30 backdrop-blur-md">
+                <ShieldCheck size={14} />
+                Built on International Trade Standards
+              </div>
+              <div className="text-xs text-slate-400 font-semibold tracking-wide pl-1">
+                Incoterms® 2020 • UCP 600 • ISBP 821 • CSRD Scope 3
+              </div>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-[0.95]">
-              Smart Trade &<br />
-              <span className="text-emerald-500">Banking Docs.</span>
+              Smart Trade Compliance &<br />
+              <span className="text-emerald-500">Risk Management</span>
             </h1>
             <p className="text-slate-300 text-lg max-w-lg leading-relaxed font-semibold">
-              An intelligent platform for managing banking documentation & LC compliance (UCP 600), selecting optimal Incoterms® 2020, and analyzing global logistics under sustainability and ESG metrics.
+              decision-support platform helping SMEs navigate international trade regulations, Letter of Credit documentation, Incoterms® 2020, sustainability requirements, and trade compliance through practical guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
               <button 
                 onClick={onStartWizard}
                 className="group px-8 py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 cursor-pointer"
               >
-                Start Analysis
+                Start Assessment
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={24} />
               </button>
               <button 
                 onClick={onStartCompare}
                 className="px-8 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black text-lg transition-all backdrop-blur-md border border-white/10 hover:scale-105 active:scale-95 cursor-pointer"
               >
-                Compare Terms
+                Compare Incoterms®
               </button>
               <button 
                 onClick={onStartContract}
                 className="px-8 py-5 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-300 rounded-2xl font-black text-lg transition-all border border-emerald-500/30 hover:border-emerald-500/60 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <FileText size={18} />
-                Contract Auditor
+                Review Contract
               </button>
             </div>
           </motion.div>          <motion.div 
@@ -162,7 +167,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
 
                 {/* Nodes layout absolute positions */}
                 
-                {/* 1. Incoterms Analysis Node (Top-Center) */}
+                {/* 1. Trade Rules Node (Top-Center) */}
                 <div 
                   style={{ left: '50%', top: '6%' }}
                   className={`absolute -translate-x-1/2 w-[250px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border text-center ${
@@ -175,15 +180,19 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 >
                   <div className="flex items-center justify-center gap-2 mb-1.5">
                     <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs">📊</span>
-                    <h4 className="text-white font-black text-xs">Incoterms Analysis</h4>
+                    <h4 className="text-white font-black text-xs">Trade Rules</h4>
                   </div>
-                  <p className="text-slate-300 text-[10px] leading-relaxed font-semibold">
-                    Define responsibilities, allocate supply chain costs, and pinpoint transit risk handovers.
+                  <p className="text-slate-200 text-xs font-bold mb-1">
+                    Incoterms® Analysis
                   </p>
-                  <span className="text-[9px] text-slate-500 font-bold block mt-1">Obligations & Costs</span>
+                  <div className="flex flex-wrap items-center justify-center gap-1 mt-1.5">
+                    <span className="text-[9px] text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30 font-bold">Responsibilities</span>
+                    <span className="text-[9px] text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30 font-bold">Risk Transfer</span>
+                    <span className="text-[9px] text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-500/30 font-bold">Cost Allocation</span>
+                  </div>
                 </div>
 
-                {/* 2. Central Node: Correct Incoterms Selection */}
+                {/* 2. Central Node: Smart Trade Decision */}
                 <div 
                   style={{ left: '50%', top: '53%' }}
                   className={`absolute -translate-x-1/2 -translate-y-1/2 z-30 transition-all duration-300 ${
@@ -197,15 +206,18 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                   <div className="absolute inset-0 -m-3 rounded-full border border-emerald-500/20 animate-pulse pointer-events-none" />
                   
                   {/* Central Button / Ring */}
-                  <div className="w-36 h-36 rounded-full bg-slate-900 border-2 border-emerald-500 flex flex-col items-center justify-center text-center p-4 shadow-[0_0_35px_rgba(16,185,129,0.3)] transition-all">
-                    <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest mb-1">ICC 2020 RULES</span>
-                    <span className="text-white font-black text-xs tracking-tight leading-normal uppercase">Correct Selection</span>
-                    <span className="text-emerald-500 font-black text-sm tracking-tight leading-none">Incoterms®</span>
-                    <span className="text-[9px] text-slate-400 font-bold mt-1.5">Rule Core Link</span>
+                  <div className="w-36 h-36 rounded-full bg-slate-900 border-2 border-emerald-500 flex flex-col items-center justify-center text-center p-3 shadow-[0_0_35px_rgba(16,185,129,0.3)] transition-all">
+                    <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-widest leading-none mb-1">SMART TRADE</span>
+                    <span className="text-white font-black text-xs tracking-wider leading-none uppercase mb-2">DECISION</span>
+                    <div className="flex flex-col text-[9px] text-slate-300 font-bold leading-tight uppercase tracking-wider">
+                      <span>Compliance</span>
+                      <span>Risk</span>
+                      <span className="text-emerald-400">Sustainability</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 3. Banking Docs Analysis Node (Bottom-Left) */}
+                {/* 3. Documentary Compliance Node (Bottom-Left) */}
                 <div 
                   style={{ left: '4%', bottom: '8%' }}
                   className={`absolute w-[220px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border text-left ${
@@ -218,15 +230,19 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 >
                   <div className="flex items-center justify-start gap-2 mb-1.5">
                     <span className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold text-xs">📜</span>
-                    <h4 className="text-white font-black text-xs">Banking Docs Analysis</h4>
+                    <h4 className="text-white font-black text-xs">Documentary Compliance</h4>
                   </div>
-                  <p className="text-slate-300 text-[10px] leading-relaxed font-semibold">
-                    Review and match shipping documents with Letter of Credit requirements under UCP 600.
+                  <p className="text-slate-200 text-xs font-bold mb-1">
+                    LC Documents
                   </p>
-                  <span className="text-[9px] text-slate-500 font-bold block mt-1">UCP 600 Compliance</span>
+                  <div className="flex flex-wrap items-center justify-start gap-1 mt-1.5">
+                    <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">Discrepancy Check</span>
+                    <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">UCP 600</span>
+                    <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">ISBP</span>
+                  </div>
                 </div>
 
-                {/* 4. Sustainability Analysis Node (Bottom-Right) */}
+                {/* 4. Sustainability Node (Bottom-Right) */}
                 <div 
                   style={{ right: '4%', bottom: '8%' }}
                   className={`absolute w-[220px] z-20 cursor-pointer transition-all duration-300 p-4 rounded-2xl border text-left ${
@@ -239,12 +255,15 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 >
                   <div className="flex items-center justify-start gap-2 mb-1.5">
                     <span className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-xs">🌱</span>
-                    <h4 className="text-white font-black text-xs">Sustainability Analysis</h4>
+                    <h4 className="text-white font-black text-xs">Sustainability</h4>
                   </div>
-                  <p className="text-slate-300 text-[10px] leading-relaxed font-semibold">
-                    Determine transport carbon footprint transfer points and report Scope 3 emissions.
+                  <p className="text-slate-200 text-xs font-bold mb-1">
+                    Scope 3
                   </p>
-                  <span className="text-[9px] text-slate-500 font-bold block mt-1">ESG & Emission Splits</span>
+                  <div className="flex flex-wrap items-center justify-start gap-1 mt-1.5">
+                    <span className="text-[9px] text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-500/30 font-bold">CSRD</span>
+                    <span className="text-[9px] text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-500/30 font-bold">Logistics Data</span>
+                  </div>
                 </div>
              </div>
 
@@ -274,7 +293,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               <span className="text-emerald-600">Dynamic Intelligence.</span>
             </h2>
             <p className="text-slate-600 text-xl font-medium leading-relaxed">
-              Why settle for an old-fashioned PDF? SmartINCO provides real-time risk assessment and sustainability data for the modern supply chain.
+              Why settle for an old-fashioned PDF? TradeTrust provides real-time risk assessment and sustainability data for the modern supply chain.
             </p>
           </div>
 
@@ -331,7 +350,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               Ready to <span className="text-emerald-500">Scale?</span>
            </h3>
            <p className="text-slate-400 text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-              Join thousands of SMEs and global exporters who rely on SmartINCO for their international logistics strategy.
+              Join thousands of SMEs and global exporters who rely on TradeTrust for their international logistics strategy.
            </p>
            <button 
              onClick={onStartWizard}

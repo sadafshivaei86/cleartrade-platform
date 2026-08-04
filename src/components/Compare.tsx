@@ -28,7 +28,7 @@ export default function Compare({ onReset }: CompareProps) {
           Strategic Comparison — Select 2 to 4 Terms
         </div>
         <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">
-          Compare <span className="text-blue-600">Mechanics</span>
+          Compare <span className="text-emerald-600">Mechanics</span>
         </h2>
         <p className="text-slate-500 text-lg font-medium max-w-2xl leading-relaxed">
           Analyze the delicate balance between risk transfer, carbon footprints, and operational control across different Incoterms® 2020 frameworks.
@@ -232,7 +232,7 @@ export default function Compare({ onReset }: CompareProps) {
             </div>
             <div className="space-y-2">
               <h3 className="text-2xl font-black text-slate-400 tracking-tight">Select Incoterms to Compare</h3>
-              <p className="text-slate-400 font-medium">Choose at least two terms from the list above to see their detailed mechanics side-by-side.</p>
+              <p className="text-slate-400 font-medium">Choose at least two terms from the list above to see their detailed <span className="text-emerald-600 font-semibold">mechanics</span> side-by-side.</p>
             </div>
           </div>
         )}
