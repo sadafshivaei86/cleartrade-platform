@@ -1950,7 +1950,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                         {/* Audit Readiness Actions - Unified Visual Checklist */}
                         <div className="p-6 bg-emerald-50/40 border border-emerald-100 rounded-3xl space-y-4">
                           <h5 className="text-[10px] font-black uppercase tracking-widest text-emerald-900 flex items-center gap-1.5">
-                            <Shield size={12} className="text-emerald-700" /> CSRD Action Checklist by Inbound Role
+                            <Shield size={12} className="text-emerald-700" /> CSRD Action Checklist by Inbound <span className="text-emerald-600">Role</span>
                           </h5>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Seller role block */}

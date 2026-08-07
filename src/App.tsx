@@ -162,7 +162,17 @@ export default function App() {
                         Operational Wizard — Analysis {history.length + 1}
                       </div>
                       <h2 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight max-w-4xl">
-                        {currentStep?.question}
+                        {currentStep?.question ? (
+                          currentStep.question.split(/(role)/i).map((part, index) =>
+                            part.toLowerCase() === 'role' ? (
+                              <span key={index} className="text-emerald-600">
+                                {part}
+                              </span>
+                            ) : (
+                              part
+                            )
+                          )
+                        ) : null}
                       </h2>
                     </div>
 

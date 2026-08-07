@@ -590,7 +590,7 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
   },
   TRANSPORT_MODE: {
     id: 'TRANSPORT_MODE',
-    question: 'How should your goods be transported?',
+    question: 'How will the goods be transported ?',
     options: [
       { label: 'Ocean / Water', nextStep: 'OCEAN_FLOW_STEP2' },
       { label: 'Any Mode', nextStep: 'ANY_MODE_FLOW_STEP2' }
@@ -599,7 +599,7 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
   // OCEAN_FLOW
   OCEAN_FLOW_STEP2: {
     id: 'OCEAN_FLOW_STEP2',
-    question: 'Who should assume the cost & risk of the international transport?',
+    question: 'Who pays for shipping, and who takes the risk if something goes wrong?',
     options: [
       { label: 'Buyer', nextStep: 'OCEAN_BUYER_STEP3' },
       { label: 'Seller', nextStep: 'OCEAN_SELLER_STEP3' }
@@ -607,7 +607,7 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
   },
   OCEAN_BUYER_STEP3: {
     id: 'OCEAN_BUYER_STEP3',
-    question: 'Who should be responsible for loading the goods onto the ship?',
+    question: 'Who is in charge of loading the goods onto the ship?',
     options: [
       { label: 'Buyer', result: 'FAS' },
       { label: 'Seller', result: 'FOB' }
@@ -615,7 +615,7 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
   },
   OCEAN_SELLER_STEP3: {
     id: 'OCEAN_SELLER_STEP3',
-    question: 'Should the seller also organize transport insurance?',
+    question: 'Does the seller also need to buy insurance for the shipment?',
     options: [
       { label: 'Yes', result: 'CIF' },
       { label: 'No', result: 'CFR' }
@@ -624,7 +624,7 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
   // ANY_MODE_FLOW
   ANY_MODE_FLOW_STEP2: {
     id: 'ANY_MODE_FLOW_STEP2',
-    question: 'Where should the buyer start assuming the transport cost & risk?',
+    question: 'When does responsibility shift from the seller to the buyer?',
     options: [
       { label: 'Seller’s Premises', result: 'EXW' },
       { label: 'Named Place (Export)', result: 'FCA' },
@@ -634,7 +634,7 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
   },
   IMPORT_FLOW: {
     id: 'IMPORT_FLOW',
-    question: 'Should the seller also organize transport insurance?',
+    question: 'Does the seller also need to buy insurance for the shipment?',
     options: [
       { label: 'Yes', result: 'CIP' },
       { label: 'No', result: 'CPT' }
