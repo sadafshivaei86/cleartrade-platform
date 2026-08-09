@@ -293,7 +293,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               <span className="text-emerald-600">Dynamic Intelligence.</span>
             </h2>
             <p className="text-slate-600 text-xl font-medium leading-relaxed">
-              Why settle for an old-fashioned PDF? TradeTrust provides real-time risk assessment and sustainability data for the modern supply chain.
+              Why settle for an old-fashioned PDF? ClearTrade provides real-time risk assessment and sustainability data for the modern supply chain.
             </p>
           </div>
 
@@ -350,7 +350,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               Ready to <span className="text-emerald-500">Scale?</span>
            </h3>
            <p className="text-slate-400 text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-              Join thousands of SMEs and global exporters who rely on TradeTrust for their international logistics strategy.
+              Join thousands of SMEs and global exporters who rely on ClearTrade for their international logistics strategy.
            </p>
            <button 
              onClick={onStartWizard}
