@@ -52,7 +52,6 @@ Once a term is recommended (e.g. **FAS – Free Alongside Ship**), ClearTrade sh
 
 <p align="center">
   <img src="assets/screenshots/result-risk-hierarchy.png" width="70%" />
-  <img src="assets/screenshots/transfer-point-analysis.png" width="70%" />
 </p>
 
 Each recommendation also comes with **expert-style strategic insights** — plain-language guidance on when the chosen term is a good fit and where its weak points are.
