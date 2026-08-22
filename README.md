@@ -61,7 +61,7 @@ Each recommendation also comes with **expert-style strategic insights** — plai
 Based on the selected Incoterm and applicable freight regulations, ClearTrade maps **which party actually holds the authority** to access carbon and logistics data — the prerequisite for any credible **Scope 3 / GHG Protocol** reporting — and lays out a simplified **CSRD compliance roadmap**, plus concrete "greener Incoterm" recommendations (e.g. moving from EXW to FCA, or from maritime E/F terms to CPT/CIP) to close the sustainability blind spot.
 
 <p align="center">
-  <img src="assets/screenshots/carbon-risk-allocation.png" width="100%" />
+  <img src="assets/screenshots/carbon-risk-allocation.png" width="70%" />
 
 </p>
 
