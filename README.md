@@ -51,8 +51,8 @@ A step-by-step questionnaire — role (buyer/seller), transport mode, who bears 
 Once a term is recommended (e.g. **FAS – Free Alongside Ship**), ClearTrade shows exactly where legal risk, financial cost, and insurance obligation transfer along the logistics chain — stage by stage, seller-controlled vs. buyer-controlled.
 
 <p align="center">
-  <img src="assets/screenshots/result-risk-hierarchy.png" width="100%" />
-  <img src="assets/screenshots/transfer-point-analysis.png" width="100%" />
+  <img src="assets/screenshots/result-risk-hierarchy.png" width="70%" />
+  <img src="assets/screenshots/transfer-point-analysis.png" width="70%" />
 </p>
 
 Each recommendation also comes with **expert-style strategic insights** — plain-language guidance on when the chosen term is a good fit and where its weak points are.
