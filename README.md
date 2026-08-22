@@ -69,28 +69,28 @@ Based on the selected Incoterm and applicable freight regulations, ClearTrade ma
 A dedicated view listing the **minimum mandatory documents** for both buyer and seller under the selected Incoterm, cross-referenced against **UCP 600 / ISBP** standards, plus the underlying ICC guidance — built to reduce documentary discrepancies before a letter of credit is ever presented at a bank.
 
 <p align="center">
-  <img src="assets/screenshots/documentary-compliance.png" width="100%" />
+  <img src="assets/screenshots/documentary-compliance.png" width="70%" />
 </p>
 
 ### 🔍 Intelligence Hub
 A control desk that lets users jump straight into any single analytics engine — Incoterms matrix, sustainability protocols, or documentary framework — without repeating the whole wizard.
 
 <p align="center">
-  <img src="assets/screenshots/intelligence-hub.png" width="100%" />
+  <img src="assets/screenshots/intelligence-hub.png" width="70%" />
 </p>
 
 ### ⇄ Compare Mechanics
 Select 2–4 Incoterms and compare them side by side across risk transfer, carbon control, and documentary burden — built for the moment a company is negotiating and weighing real alternatives, not just looking up one definition.
 
 <p align="center">
-  <img src="assets/screenshots/compare-fas-cif.png" width="100%" />
+  <img src="assets/screenshots/compare-fas-cif.png" width="70%" />
 </p>
 
 ### 🛡️ Review Contract
 An automated auditing tool: upload or paste a contract/logistics clause, and ClearTrade checks it against Incoterms® 2020 risk handovers, Scope 3 / green logistics requirements, and UCP 600 documentary standards — flagging mismatches, mispriced risk, and compliance gaps before they become disputes.
 
 <p align="center">
-  <img src="assets/screenshots/review-contract.png" width="100%" />
+  <img src="assets/screenshots/review-contract.png" width="70%" />
 </p>
 
 ## 4. Objectives
