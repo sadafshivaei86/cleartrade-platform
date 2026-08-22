@@ -57,16 +57,13 @@ Once a term is recommended (e.g. **FAS – Free Alongside Ship**), ClearTrade sh
 
 Each recommendation also comes with **expert-style strategic insights** — plain-language guidance on when the chosen term is a good fit and where its weak points are.
 
-<p align="center">
-  <img src="assets/screenshots/logistical-control-insights.png" width="70%" />
-</p>
 
 ### 🌱 Sustainability & Carbon Control Analytics
 Based on the selected Incoterm and applicable freight regulations, ClearTrade maps **which party actually holds the authority** to access carbon and logistics data — the prerequisite for any credible **Scope 3 / GHG Protocol** reporting — and lays out a simplified **CSRD compliance roadmap**, plus concrete "greener Incoterm" recommendations (e.g. moving from EXW to FCA, or from maritime E/F terms to CPT/CIP) to close the sustainability blind spot.
 
 <p align="center">
-  <img src="assets/screenshots/carbon-risk-allocation.png" width="49%" />
-  <img src="assets/screenshots/sustainability-recommendations.png" width="49%" />
+  <img src="assets/screenshots/carbon-risk-allocation.png" width="100%" />
+
 </p>
 
 ### 📄 Documentary Compliance
