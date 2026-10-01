@@ -456,7 +456,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     insights: [
       { type: 'tip', text: 'Perfect for oversized machinery where Seller has the specialized team.' },
       { type: 'warning', text: 'Risk transfers only AFTER unloading is completed.' },
-      { type: 'info', text: 'The only term that explicitly includes unloading by the Seller.' },
+      { type: 'info', text: 'Under DPU the buyer clears the goods for import. If the seller should also handle import clearance, this must be agreed separately in the sales contract.' },
       { type: 'danger', text: 'Seller must ensure they have rights/permits to unload at Buyer\'s site.' }
     ],
     responsibilities: {
@@ -596,13 +596,15 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
       { label: 'Any Mode', nextStep: 'ANY_MODE_FLOW_STEP2' }
     ]
   },
-  // OCEAN_FLOW
+
+  // ---------- Ocean / Water path ----------
+  // I-01: this question now asks only about the main carriage.
   OCEAN_FLOW_STEP2: {
     id: 'OCEAN_FLOW_STEP2',
-    question: 'Who pays for shipping, and who takes the risk if something goes wrong?',
+    question: 'Who arranges and pays for the main sea transport?',
     options: [
       { label: 'Buyer', nextStep: 'OCEAN_BUYER_STEP3' },
-      { label: 'Seller', nextStep: 'OCEAN_SELLER_STEP3' }
+      { label: 'Seller', nextStep: 'OCEAN_RISK_POINT' }
     ]
   },
   OCEAN_BUYER_STEP3: {
@@ -613,6 +615,15 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
       { label: 'Seller', result: 'FOB' }
     ]
   },
+  // I-01: risk is asked separately once the seller pays for the carriage.
+  OCEAN_RISK_POINT: {
+    id: 'OCEAN_RISK_POINT',
+    question: 'Where should the risk pass from the seller to the buyer?',
+    options: [
+      { label: 'On board the ship at the port of shipment', nextStep: 'OCEAN_SELLER_STEP3' },
+      { label: 'At the destination', nextStep: 'DESTINATION_FLOW' }
+    ]
+  },
   OCEAN_SELLER_STEP3: {
     id: 'OCEAN_SELLER_STEP3',
     question: 'Does the seller also need to buy insurance for the shipment?',
@@ -621,28 +632,51 @@ export const DECISION_TREE: Record<string, QuestionStep> = {
       { label: 'No', result: 'CFR' }
     ]
   },
-  // ANY_MODE_FLOW
+
+  // ---------- Any Mode path ----------
+  // I-05: the question now asks about risk, and the import-country answer leads to the D rules.
   ANY_MODE_FLOW_STEP2: {
     id: 'ANY_MODE_FLOW_STEP2',
-    question: 'When does responsibility shift from the seller to the buyer?',
+    question: 'Where should the risk pass from the seller to the buyer?',
     options: [
-      { label: 'Seller’s Premises', result: 'EXW' },
-      { label: 'Named Place (Export)', result: 'FCA' },
-      { label: 'Named Place (Import)', nextStep: 'IMPORT_FLOW' },
-      { label: 'Buyer’s Premises', nextStep: 'BUYER_PREMISES_FLOW' }
+      { label: 'Seller’s Premises', nextStep: 'SELLER_PREMISES_FLOW' },
+      { label: 'Named Place (Export)', nextStep: 'EXPORT_FLOW' },
+      { label: 'Destination (Import)', nextStep: 'DESTINATION_FLOW' }
     ]
   },
-  IMPORT_FLOW: {
-    id: 'IMPORT_FLOW',
+  // I-03
+  SELLER_PREMISES_FLOW: {
+    id: 'SELLER_PREMISES_FLOW',
+    question: 'Who loads the goods and clears them for export?',
+    options: [
+      { label: 'Buyer', result: 'EXW' },
+      { label: 'Seller', result: 'FCA' }
+    ]
+  },
+  // I-04
+  EXPORT_FLOW: {
+    id: 'EXPORT_FLOW',
+    question: 'Who arranges and pays for the main transport?',
+    options: [
+      { label: 'Buyer', result: 'FCA' },
+      { label: 'Seller', nextStep: 'CARRIAGE_INSURANCE_FLOW' }
+    ]
+  },
+  // Replaces IMPORT_FLOW; CPT/CIP now sit under the export-country answer.
+  CARRIAGE_INSURANCE_FLOW: {
+    id: 'CARRIAGE_INSURANCE_FLOW',
     question: 'Does the seller also need to buy insurance for the shipment?',
     options: [
       { label: 'Yes', result: 'CIP' },
       { label: 'No', result: 'CPT' }
     ]
   },
-  BUYER_PREMISES_FLOW: {
-    id: 'BUYER_PREMISES_FLOW',
-    question: 'Should the seller be responsible for unloading?',
+
+  // ---------- Destination (D rules), shared by both paths ----------
+  // Replaces BUYER_PREMISES_FLOW.
+  DESTINATION_FLOW: {
+    id: 'DESTINATION_FLOW',
+    question: 'Should the seller be responsible for unloading at the destination?',
     options: [
       { label: 'Yes', result: 'DPU' },
       { label: 'No', nextStep: 'CUSTOMS_FLOW' }
