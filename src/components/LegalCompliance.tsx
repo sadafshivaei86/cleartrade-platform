@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Shield, Info, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, BookOpen, User, Gavel, Landmark, StickyNote } from 'lucide-react';
-import { LEGAL_DATA, type LegalDoc, type LegalRef } from '../data/legalFramework';
+import { Info, AlertTriangle, ChevronDown, ChevronUp, User, Gavel, Landmark, StickyNote } from 'lucide-react';
+import { LEGAL_DATA, DOC_BASIS_LABEL, STANDARD_SOURCES, type LegalDoc, type LegalRef } from '../data/legalFramework';
 
 interface LegalComplianceProps {
   initialTerm?: string;
@@ -9,8 +9,8 @@ interface LegalComplianceProps {
   showBibliography?: boolean;
 }
 
-export default function LegalCompliance({ 
-  initialTerm = 'FCA', 
+export default function LegalCompliance({
+  initialTerm = 'FCA',
   showSelector = true,
   showBibliography = false
 }: LegalComplianceProps) {
@@ -22,38 +22,37 @@ export default function LegalCompliance({
 
   const renderBadge = (ref: LegalRef) => {
     let colorClass = 'bg-slate-100 text-slate-500';
-    if (ref.source === 'Incoterms 2020') colorClass = 'bg-blue-100 text-blue-700';
+    if (ref.source === 'Incoterms® 2020') colorClass = 'bg-blue-100 text-blue-700';
     if (ref.source === 'UCP 600') colorClass = 'bg-amber-100 text-amber-700';
-    if (ref.source === 'ISBP 745') colorClass = 'bg-emerald-100 text-emerald-700';
+    if (ref.source === 'ISBP 821') colorClass = 'bg-emerald-100 text-emerald-700';
 
     return (
-      <span key={`${ref.source}-${ref.article}`} className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold leading-none ${colorClass}`}>
-        [{ref.source} · {ref.article}]
+      <span key={`${ref.source}-${ref.article ?? ''}`} className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold leading-none ${colorClass}`}>
+        {ref.source}{ref.article ? ` – ${ref.article}` : ''}
       </span>
     );
   };
 
-  const DocRow = ({ doc }: { doc: LegalDoc, key?: React.Key }) => {
-    const isExpanded = expandedDoc === doc.name;
+  const DocRow = ({ doc, side }: { doc: LegalDoc, side: 'S' | 'B', key?: React.Key }) => {
+    const rowId = `${side}-${doc.name}`;
+    const isExpanded = expandedDoc === rowId;
     return (
       <div className="border-b border-slate-100 last:border-0">
         <button
-          onClick={() => setExpandedDoc(isExpanded ? null : doc.name)}
+          onClick={() => setExpandedDoc(isExpanded ? null : rowId)}
           className="w-full p-4 flex flex-col gap-1 text-left hover:bg-slate-50 transition-colors group"
         >
           <div className="flex justify-between items-start gap-4">
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold text-slate-900">{doc.name}</span>
-                <div className="flex flex-wrap gap-1">
-                  {doc.refs.map(renderBadge)}
-                </div>
+            <div className="space-y-1.5">
+              <span className="text-sm font-bold text-slate-900 block">{doc.name}</span>
+              <div className="flex flex-wrap gap-1">
+                {doc.refs.map(renderBadge)}
               </div>
               <p className="text-[11px] text-slate-500 italic font-medium">
                 {doc.description}
               </p>
             </div>
-            {isExpanded ? <ChevronUp size={16} className="text-slate-400 mt-1" /> : <ChevronDown size={16} className="text-slate-400 group-hover:text-slate-600 mt-1" />}
+            {isExpanded ? <ChevronUp size={16} className="text-slate-400 mt-1 flex-shrink-0" /> : <ChevronDown size={16} className="text-slate-400 group-hover:text-slate-600 mt-1 flex-shrink-0" />}
           </div>
         </button>
 
@@ -70,29 +69,25 @@ export default function LegalCompliance({
                   <div className="flex items-start gap-2">
                     <User size={14} className="text-slate-400 mt-0.5" />
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prepped By</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Prepared By</span>
                       <p className="text-xs font-bold text-slate-700">{doc.whoPrepares}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <Gavel size={14} className="text-slate-400 mt-0.5" />
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Legal Basis</span>
-                      <p className="text-xs font-bold text-slate-700">{doc.legalBasis}</p>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Basis</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded inline-block mb-1 ${doc.basis === 'incoterms' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'}`}>
+                        {DOC_BASIS_LABEL[doc.basis]}
+                      </span>
+                      <p className="text-[11px] text-slate-600 leading-tight">{doc.legalBasis}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
                     <Landmark size={14} className="text-slate-400 mt-0.5" />
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Banking Requirement</span>
-                      <div className="space-y-1">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded inline-block ${doc.isLCRequired ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
-                          {doc.isLCRequired ? 'Required for LC Presentation' : 'Not Mandatory for LC'}
-                        </span>
-                        {doc.bankingRequirement && (
-                          <p className="text-[11px] text-slate-600 leading-tight mt-1">{doc.bankingRequirement}</p>
-                        )}
-                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Under a Letter of Credit</span>
+                      <p className="text-[11px] text-slate-600 leading-tight">{doc.lcNote}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
@@ -126,8 +121,8 @@ export default function LegalCompliance({
                   setExpandedDoc(null);
                 }}
                 className={`px-4 py-2 rounded-full text-xs font-black transition-all border ${
-                  selectedTerm === term 
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg' 
+                  selectedTerm === term
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
                     : 'bg-white border-slate-100 text-slate-500 hover:border-slate-300'
                 }`}
               >
@@ -149,7 +144,7 @@ export default function LegalCompliance({
             <AlertTriangle size={24} className="flex-shrink-0" />
             <div className="space-y-0.5">
               <span className="text-[10px] font-black uppercase tracking-widest leading-none">Maritime Advisory</span>
-              <p className="text-xs font-bold leading-tight">Sea & inland waterway transport only. Avoid for multimodal or air freight.</p>
+              <p className="text-xs font-bold leading-tight">{termData.seaAdvisory}</p>
             </div>
           </motion.div>
         )}
@@ -161,10 +156,10 @@ export default function LegalCompliance({
         <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm h-fit">
           <div className="bg-[#0C447C] p-4 text-white">
             <div className="text-[10px] font-black uppercase tracking-widest opacity-70">Rules A1–A10</div>
-            <h4 className="text-sm font-black uppercase tracking-widest">Seller's Documents</h4>
+            <h4 className="text-sm font-black uppercase tracking-widest">Seller's Typical Documents</h4>
           </div>
           <div className="divide-y divide-slate-100">
-            {termData.sellerDocs.map(doc => <DocRow key={doc.name} doc={doc} />)}
+            {termData.sellerDocs.map(doc => <DocRow key={doc.name} doc={doc} side="S" />)}
           </div>
         </div>
 
@@ -172,12 +167,20 @@ export default function LegalCompliance({
         <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm h-fit">
           <div className="bg-[#791F1F] p-4 text-white">
             <div className="text-[10px] font-black uppercase tracking-widest opacity-70">Rules B1–B10</div>
-            <h4 className="text-sm font-black uppercase tracking-widest">Buyer's Documents</h4>
+            <h4 className="text-sm font-black uppercase tracking-widest">Buyer's Typical Documents / Arrangements</h4>
           </div>
           <div className="divide-y divide-slate-100">
-            {termData.buyerDocs.map(doc => <DocRow key={doc.name} doc={doc} />)}
+            {termData.buyerDocs.map(doc => <DocRow key={doc.name} doc={doc} side="B" />)}
           </div>
         </div>
+      </div>
+
+      {/* Basis note */}
+      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-3 text-slate-600">
+        <Info size={18} className="flex-shrink-0 text-slate-400" />
+        <p className="text-xs font-semibold leading-tight">
+          Incoterms allocate obligations, but some documents are only required if the contract or letter of credit calls for them.
+        </p>
       </div>
 
       {/* Guidance Note */}
@@ -212,16 +215,16 @@ export default function LegalCompliance({
               <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest">UCP 600 (2007)</span>
             </div>
             <p className="text-[10px] text-amber-700/70 font-medium leading-relaxed">
-              Uniform Customs and Practice for Documentary Credits. ICC Pub No. 600. Articles 14–28 governing document compliance.
+              Uniform Customs and Practice for Documentary Credits. ICC Publication No. 600. Articles 14–28 on the examination of documents.
             </p>
           </div>
           <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-600" />
-              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">ISBP 745 (2013)</span>
+              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">ISBP 821 (2023)</span>
             </div>
             <p className="text-[10px] text-emerald-700/70 font-medium leading-relaxed">
-              International Standard Banking Practice. ICC Pub No. 745. Granular paragraph guidance for LC document examination.
+              International Standard Banking Practice for the Examination of Documents under UCP 600. Current ICC practice guidance for document examination.
             </p>
           </div>
         </div>
@@ -231,28 +234,12 @@ export default function LegalCompliance({
       {showBibliography && (
         <section className="bg-slate-50 rounded-[3rem] p-10 md:p-16 space-y-12 mt-12">
           <div className="space-y-4 text-center">
-              <div className="inline-block px-4 py-1.5 bg-white rounded-full border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-400">Legal Documentation Bibliography</div>
+              <div className="inline-block px-4 py-1.5 bg-white rounded-full border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-400">Rule Sources Used in ClearTrade</div>
               <h3 className="text-3xl font-black text-slate-900 tracking-tighter">Academic & Global <span className="text-slate-400">Standards</span></h3>
           </div>
-          
+
           <div className="grid gap-8 max-w-4xl mx-auto">
-            {[
-              {
-                id: 1,
-                citation: "International Chamber of Commerce (ICC). (2020). Incoterms® 2020: ICC Rules for the Use of Domestic and International Trade Terms. ICC Services, Paris.",
-                notes: ["Articles A1–A10 and B1–B10 for each term", "Guidance Notes per term (EXW, FCA, DDP)"]
-              },
-              {
-                id: 2,
-                citation: "International Chamber of Commerce (ICC). (2007). Uniform Customs and Practice for Documentary Credits (UCP 600). ICC Publication No. 600. ICC Services, Paris.",
-                notes: ["Key articles used: 14 (compliance), 18 (invoice), 19 (multimodal), 20 (B/L), 28 (insurance)"]
-              },
-              {
-                id: 3,
-                citation: "International Chamber of Commerce (ICC). (2013). International Standard Banking Practice for the Examination of Documents under UCP 600 (ISBP 745). ICC Publication No. 745. ICC Services, Paris.",
-                notes: ["Key paragraphs used: A (general), C (invoice), E (transport documents), K (insurance)"]
-              }
-            ].map((ref) => (
+            {STANDARD_SOURCES.map((ref) => (
               <div key={ref.id} className="flex gap-8 group">
                  <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 font-black text-sm group-hover:border-slate-900 group-hover:text-slate-900 transition-colors">
                    {ref.id}
@@ -262,7 +249,7 @@ export default function LegalCompliance({
                     <div className="space-y-1">
                       {ref.notes.map((note, i) => (
                         <div key={i} className="flex items-center gap-2 text-slate-500">
-                          <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
                           <span className="text-xs font-medium">{note}</span>
                         </div>
                       ))}

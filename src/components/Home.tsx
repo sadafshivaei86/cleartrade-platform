@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Globe, ShieldCheck, Leaf, FileText, Ship, Truck, Package, Clock } from 'lucide-react';
+import LegalCompliance from './LegalCompliance';
 
 interface HomeProps {
   onStartWizard: () => void;
@@ -42,11 +43,12 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               </div>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-[0.95]">
-              Smart Trade Compliance &<br />
+              Smart Trade<br />
+              Decision Support &<br />
               <span className="text-emerald-500">Risk Management</span>
             </h1>
             <p className="text-slate-300 text-lg max-w-lg leading-relaxed font-semibold">
-              decision-support platform helping SMEs navigate international trade regulations, Letter of Credit documentation, Incoterms® 2020, sustainability requirements, and trade compliance through practical guidance.
+              Navigate Incoterms, documentary requirements, risk allocation, costs and sustainability through rule-based decision support.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
               <button 
@@ -236,7 +238,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                     LC Documents
                   </p>
                   <div className="flex flex-wrap items-center justify-start gap-1 mt-1.5">
-                    <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">Discrepancy Check</span>
+                    <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">Documentary Check</span>
                     <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">UCP 600</span>
                     <span className="text-[9px] text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 font-bold">ISBP</span>
                   </div>
@@ -277,10 +279,10 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
       {/* Stats / Trust Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <StatItem label="Active Users" value="12,000+" />
-          <StatItem label="Ports Covered" value="450+" />
-          <StatItem label="Compliance Accuracy" value="99.9%" />
-          <StatItem label="CO2 Reduced" value="4.2M Tons" />
+          <StatItem label="Incoterms® 2020 Rules" value="11" />
+          <StatItem label="Analysis Views" value="3" />
+          <StatItem label="Rule Sources" value="5" />
+          <StatItem label="Shipment Data Stored" value="0" />
         </div>
       </section>
 
@@ -293,7 +295,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               <span className="text-emerald-600">Dynamic Intelligence.</span>
             </h2>
             <p className="text-slate-600 text-xl font-medium leading-relaxed">
-              Why settle for an old-fashioned PDF? ClearTrade provides real-time risk assessment and sustainability data for the modern supply chain.
+              Why settle for an old-fashioned PDF? ClearTrade shows what each Incoterms® 2020 rule means for risk, costs, documents and access to transport emission data.
             </p>
           </div>
 
@@ -306,13 +308,13 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 />
                 <FeatureBlock 
                   icon={<Leaf className="text-emerald-600" size={32} />}
-                  title="Sustainability Scoring"
-                  description="Choose Incoterms that empower you to select green carriers and reduce first-mile emissions."
+                  title="Carbon Data Access"
+                  description="See which party contracts each transport leg and can therefore obtain its emission data for Scope 3 requests."
                 />
                 <FeatureBlock 
                   icon={<FileText className="text-emerald-600" size={32} />}
                   title="Digital Documentation"
-                  description="Every recommendation comes with a full checklist of required commercial and transport documents."
+                  description="Every recommendation comes with a checklist of typical commercial and transport documents, mapped to UCP 600 and ISBP 821."
                 />
              </div>
              <div className="relative">
@@ -327,14 +329,30 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                       <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
                         <Clock size={20} />
                       </div>
-                      <span className="font-bold text-slate-900">Real-time Analysis</span>
+                      <span className="font-bold text-slate-900">Guided Analysis</span>
                    </div>
                    <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                      Takes less than 45 seconds to find the perfect term for your specific trade scenario.
+                      A short wizard of four to six questions leads to a recommended rule for your trade scenario.
                    </p>
                 </div>
              </div>
           </div>
+        </div>
+      </section>
+
+      {/* Standards Library */}
+      <section id="standards" className="py-28 bg-white scroll-mt-24">
+        <div className="max-w-6xl mx-auto px-6 space-y-12">
+          <div className="text-center space-y-4 max-w-3xl mx-auto">
+            <div className="inline-block px-4 py-1.5 bg-slate-50 rounded-full border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500">Standards Library</div>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 leading-tight">
+              The Rules Behind <span className="text-emerald-600">Every Result</span>
+            </h2>
+            <p className="text-slate-600 text-lg font-medium leading-relaxed">
+              ClearTrade is rule-based: its outputs follow the sources listed here, not generated text. Select a rule to see its typical documents and the provisions they rest on.
+            </p>
+          </div>
+          <LegalCompliance initialTerm="FCA" showSelector={true} showBibliography={true} />
         </div>
       </section>
 
@@ -350,7 +368,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
               Ready to <span className="text-emerald-500">Scale?</span>
            </h3>
            <p className="text-slate-400 text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-              Join thousands of SMEs and global exporters who rely on ClearTrade for their international logistics strategy.
+              Try the guided assessment and see what the selected Incoterms® rule means for your risk, costs, documents and transport data.
            </p>
            <button 
              onClick={onStartWizard}

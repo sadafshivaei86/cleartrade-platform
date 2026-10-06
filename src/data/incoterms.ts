@@ -13,7 +13,7 @@ export interface IncotermInfo {
   mode: 'All Modes' | 'Sea / Inland Waterway';
   transferPoint: string;
   transferPosition: number; // 0-100 on the risk bar
-  sellerCarbonControl: number;
+  sellerCarbonControl: number; // indicative share of the journey for which the seller can access transport data (0-100)
   buyerCarbonControl: number;
   scope3Allocation: {
     label: string;
@@ -75,15 +75,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 30,
     buyerCarbonControl: 70,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 25, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 70, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 25, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 70, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Use electric terminal tractors for alongside delivery to lower port emissions.' },
-      { type: 'warning', text: 'Scope 3 data handover at "alongside" point is often a reporting blind spot.' },
-      { type: 'danger', text: 'Major data gaps exist in terminal loading emissions; Buyer lacks visibility.' },
-      { type: 'info', text: 'All ocean transport emissions fall under Buyer Cat 4 responsibility.' }
+      { type: 'info', text: 'The Seller arranges pre-carriage to the quay; the Buyer contracts the vessel and holds the data for loading and the sea voyage.' },
+      { type: 'warning', text: 'Loading on board is arranged by the Buyer, so the Seller has no data on terminal loading or the voyage.' },
+      { type: 'danger', text: 'For containers handed over at a terminal, FAS does not fit; FCA describes the real handover and the data split more accurately.' },
+      { type: 'tip', text: 'Agree in the contract that the Buyer shares the carrier\'s emission statement for the voyage.' }
     ],
     insights: [
       { type: 'tip', text: 'Best for bulk commodities like grain or coal where shore-based cranes are used.' },
@@ -121,19 +121,19 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 40,
     buyerCarbonControl: 60,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 35, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 60, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 35, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 60, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Prioritize carriers with eco-efficient ship designs for the main carriage.' },
-      { type: 'warning', text: 'Detailed primary data needed from the stevedoring company for loading emissions.' },
-      { type: 'danger', text: 'Containerized cargo on FOB often leads to Scope 3 "Double Counting" errors.' },
-      { type: 'info', text: 'New rules require digital product passports to include FOB port data.' }
+      { type: 'info', text: 'The Seller arranges pre-carriage and loading on board; the Buyer contracts the vessel and holds the voyage data.' },
+      { type: 'warning', text: 'The Seller depends on the Buyer for sea-voyage data (Seller\'s Scope 3 Category 9).' },
+      { type: 'danger', text: 'For containerised cargo handed to a terminal before loading, FOB does not match the real handover; FCA is the suitable rule.' },
+      { type: 'tip', text: 'Agree in the contract that the Buyer shares the carrier\'s emission statement for the voyage.' }
     ],
     insights: [
       { type: 'tip', text: 'Standard for many ocean shipments. Clear cut-off point for risk.' },
-      { type: 'info', text: 'Insurance starts once goods pass the ship\'s rail (on board).' },
+      { type: 'info', text: 'Risk passes to the Buyer once the goods are on board the vessel; any cover the Buyer wants should start from that moment.' },
       { type: 'warning', text: 'Incoterms 2020: Seller must now assist with on-board security requirements.' },
       { type: 'danger', text: 'Do NOT use for containers. Use FCA if cargo is handed to a carrier inland.' }
     ],
@@ -167,15 +167,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 80,
     buyerCarbonControl: 20,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 75, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 20, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 75, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 20, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Use green procurement criteria when the Seller selects the ocean carrier.' },
-      { type: 'info', text: 'Although Seller pays, Buyer must still report as Cat 4 (upstream).' },
-      { type: 'warning', text: 'Seller must share actual emission data, not just theoretical averages.' },
-      { type: 'danger', text: 'CIF limits Buyer\'s ability to switch to low-carbon vessel options.' }
+      { type: 'info', text: 'The Seller contracts and pays the sea carriage to the named port and can obtain carrier emission data for the main leg (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller\'s insurance obligation under CIF does not change who holds the transport data.' },
+      { type: 'danger', text: 'The Buyer has no contract with the carrier and depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Agree in the contract that the Seller passes the carrier\'s emission data for the voyage to the Buyer.' }
     ],
     insights: [
       { type: 'tip', text: 'Seller handles booking freight, making it easier for first-time buyers.' },
@@ -191,8 +191,8 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 80, buyerPercentage: 20 },
-      costTransferPoint: 'Destination port/vessel',
-      customs: { export: 'Seller', transit: 'Seller', import: 'Buyer' },
+      costTransferPoint: 'Named port of destination',
+      customs: { export: 'Seller', transit: 'Buyer', import: 'Buyer' },
       insurance: { responsible: 'Seller', minimumCoverage: 'ICC Clause C (Minimum coverage required)' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'On board at origin port', notices: 'Seller must give Buyer notice for checking of goods' }
@@ -213,15 +213,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 80,
     buyerCarbonControl: 20,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 75, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 20, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 75, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 20, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Optimize vessel filling rates to reduce the intensity per TEU.' },
-      { type: 'warning', text: 'Detailed secondary data is required if primary carrier data is absent.' },
-      { type: 'info', text: 'Reporting obligations for CFR must account for cross-border carbon taxes.' },
-      { type: 'danger', text: 'Risk/Control decoupling makes carbon optimization difficult for the Buyer.' }
+      { type: 'info', text: 'The Seller contracts and pays the sea carriage to the named port and can obtain carrier emission data for the main leg (Seller\'s Scope 3 Category 4).' },
+      { type: 'warning', text: 'Risk passes to the Buyer on board at the port of shipment, although the Seller chooses the carrier and the route.' },
+      { type: 'danger', text: 'The Buyer has no contract with the carrier and depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Agree in the contract that the Seller passes the carrier\'s emission data for the voyage to the Buyer.' }
     ],
     insights: [
       { type: 'tip', text: 'Useful when the Buyer has its own global insurance policy.' },
@@ -237,8 +237,8 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 75, buyerPercentage: 25 },
-      costTransferPoint: 'Destination port/vessel',
-      customs: { export: 'Seller', transit: 'Seller', import: 'Buyer' },
+      costTransferPoint: 'Named port of destination',
+      customs: { export: 'Seller', transit: 'Buyer', import: 'Buyer' },
       insurance: { responsible: 'Buyer', minimumCoverage: 'No obligation for Seller' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'On board at origin port', notices: 'Seller must notify Buyer that goods have been delivered' }
@@ -259,15 +259,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 5,
     buyerCarbonControl: 95,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 0, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 95, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 0, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 95, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: '95% of logistical emissions are the Buyer\'s Upstream Cat 4 responsibility.' },
-      { type: 'warning', text: 'SMEs using EXW often fail to capture factory-gate loading emissions.' },
-      { type: 'danger', text: 'Maximum "Data Gap" risk. Buyer rarely gets accurate energy data from Seller.' },
-      { type: 'tip', text: 'Use EXW if you have a "Green First" carrier partnership at the origin.' }
+      { type: 'info', text: 'The Buyer contracts all transport from the Seller\'s premises and therefore holds the primary emission data for the whole journey.' },
+      { type: 'warning', text: 'The Seller has no contract with any carrier and must ask the Buyer for transport data if a customer requests value-chain emissions.' },
+      { type: 'danger', text: 'Largest data gap for the Seller: under the GHG Protocol this transport is the Seller\'s Scope 3 Category 9, but the Seller cannot measure it.' },
+      { type: 'tip', text: 'Sellers who expect data requests can consider FCA, where they control loading, export clearance and any pre-carriage to the named place.' }
     ],
     insights: [
       { type: 'danger', text: 'Buyer is responsible for loading. Seller has NO duty to assist.' },
@@ -283,7 +283,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 5, buyerPercentage: 95 },
-      costTransferPoint: 'Seller\'s warehouse or named place',
+      costTransferPoint: 'Seller\'s premises',
       customs: { export: 'Buyer', transit: 'Buyer', import: 'Buyer' },
       insurance: { responsible: 'Buyer', minimumCoverage: 'No obligation for Seller; Buyer handles all insurance' },
       transport: { contracting: 'Buyer' },
@@ -305,15 +305,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 20,
     buyerCarbonControl: 80,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 15, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 80, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 15, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 80, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Encourage Seller to use electric last-mile vans for terminal delivery.' },
-      { type: 'info', text: 'FCA provides a clean data split point for legal carbon reporting.' },
-      { type: 'warning', text: 'Small sellers may need help calculating their Cat 9 (outbound) share.' },
-      { type: 'info', text: 'Higher reporting accuracy due to clear carrier handover documentation.' }
+      { type: 'info', text: 'The Seller controls the leg up to the named place of delivery; the Buyer contracts the main carriage and holds its emission data.' },
+      { type: 'tip', text: 'Name the place of delivery precisely: it is also the point where data responsibility passes from one party\'s carrier to the other\'s.' },
+      { type: 'warning', text: 'The Seller needs the Buyer\'s carrier data to report the main carriage (Seller\'s Scope 3 Category 9).' },
+      { type: 'info', text: 'If the named place is the Seller\'s premises, pre-carriage is also arranged by the Buyer and the Seller\'s data access is close to that under EXW.' }
     ],
     insights: [
       { type: 'tip', text: 'The modern standard for containers. Replaces FOB for tech, retail, etc.' },
@@ -329,7 +329,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 20, buyerPercentage: 80 },
-      costTransferPoint: 'Named carrier or place',
+      costTransferPoint: 'Named place of delivery to carrier',
       customs: { export: 'Seller', transit: 'Buyer', import: 'Buyer' },
       insurance: { responsible: 'Buyer', minimumCoverage: 'No obligation for Seller' },
       transport: { contracting: 'Buyer' },
@@ -351,15 +351,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 85,
     buyerCarbonControl: 15,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 80, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 15, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 80, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 15, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'warning', text: 'Seller must disclose if air-freight was used for faster transit under CIP.' },
-      { type: 'tip', text: 'Use Intermodal transport (Rail+Road) to reduce Cat 9 emissions by 60%.' },
-      { type: 'info', text: 'Insurance premiums under CIP rarely factor in carbon-offsetting costs.' },
-      { type: 'danger', text: 'New taxes on aviation fuel make CIP air-delivery significantly more expensive.' }
+      { type: 'info', text: 'The Seller contracts and pays carriage to the named place of destination and can obtain carrier data for these legs (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller\'s insurance obligation under CIP does not change who holds the transport data.' },
+      { type: 'danger', text: 'The Buyer depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Where several carriers are used, ask the Seller for data per leg rather than a single average figure.' }
     ],
     insights: [
       { type: 'warning', text: 'Higher insurance required! Seller MUST provide ICC Clause A (All Risk).' },
@@ -375,8 +375,8 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 85, buyerPercentage: 15 },
-      costTransferPoint: 'Named destination',
-      customs: { export: 'Seller', transit: 'Seller', import: 'Buyer' },
+      costTransferPoint: 'Named place of destination',
+      customs: { export: 'Seller', transit: 'Buyer', import: 'Buyer' },
       insurance: { responsible: 'Seller', minimumCoverage: 'ICC Clause A (All Risk required)' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'Handed over to first carrier', notices: 'Seller must notify Buyer that goods are delivered to carrier' }
@@ -397,15 +397,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 85,
     buyerCarbonControl: 15,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 80, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 15, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 80, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 15, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Consolidate smaller CPT shipments into full truckloads (FTL) to save fuel.' },
-      { type: 'warning', text: 'Buyer still holds responsibility for Cat 4 reporting under CPT.' },
-      { type: 'info', text: 'CPT allows smaller buyers to leverage Seller\'s larger logistics scale.' },
-      { type: 'danger', text: ' "Least-cost" routing by the Seller often ignores carbon-intensive routes.' }
+      { type: 'info', text: 'The Seller contracts and pays carriage to the named place of destination and can obtain carrier data for these legs (Seller\'s Scope 3 Category 4).' },
+      { type: 'warning', text: 'Risk passes to the Buyer when the goods are handed to the first carrier, although the Seller selects the carriers and routes.' },
+      { type: 'danger', text: 'The Buyer depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Where several carriers are used, ask the Seller for data per leg rather than a single average figure.' }
     ],
     insights: [
       { type: 'tip', text: 'Efficient for road transport within Europe or North America.' },
@@ -421,8 +421,8 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 80, buyerPercentage: 20 },
-      costTransferPoint: 'Named destination',
-      customs: { export: 'Seller', transit: 'Seller', import: 'Buyer' },
+      costTransferPoint: 'Named place of destination',
+      customs: { export: 'Seller', transit: 'Buyer', import: 'Buyer' },
       insurance: { responsible: 'Buyer', minimumCoverage: 'No obligation for Seller' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'Handed over to first carrier', notices: 'Seller must notify Buyer of delivery to carrier' }
@@ -443,15 +443,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 95,
     buyerCarbonControl: 5,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 90, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 5, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 90, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 5, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Use biodiesel-powered forklifts for the heavy unloading mandated by DPU.' },
-      { type: 'warning', text: 'Unloading energy consumption is often omitted from Cat 9 reports.' },
-      { type: 'info', text: 'Simplifies reporting for the Buyer significantly compared to EXW.' },
-      { type: 'danger', text: 'Seller specialized unloading equipment must meet local GHG standards.' }
+      { type: 'info', text: 'The Seller contracts transport to the named place of destination, including unloading there, and holds the primary data (Seller\'s Scope 3 Category 4).' },
+      { type: 'warning', text: 'Import clearance and any on-carriage after unloading are arranged by the Buyer.' },
+      { type: 'danger', text: 'The Buyer has no carrier contract for the main journey and depends on the Seller for its inbound transport data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Agree a data-sharing clause so that the Buyer receives the Seller\'s carrier data with the delivery documents.' }
     ],
     insights: [
       { type: 'tip', text: 'Perfect for oversized machinery where Seller has the specialized team.' },
@@ -462,14 +462,14 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     responsibilities: {
       export: 'Seller',
       mainTransport: 'Seller',
-      insurance: 'Seller',
+      insurance: 'Optional',
       import: 'Buyer'
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 95, buyerPercentage: 5 },
-      costTransferPoint: 'Named destination, unloaded',
+      costTransferPoint: 'Named place of destination, unloaded',
       customs: { export: 'Seller', transit: 'Seller', import: 'Buyer' },
-      insurance: { responsible: 'Seller', minimumCoverage: 'Recommended All Risk (Seller covers until destination)' },
+      insurance: { responsible: 'Seller', minimumCoverage: 'No obligation under Incoterms® 2020; the seller bears the risk until delivery' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'Named destination, unloaded', notices: 'Seller must notify Buyer to allow receiving of goods' }
     }
@@ -489,15 +489,15 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 90,
     buyerCarbonControl: 10,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 85, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 10, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 85, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 10, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'Select final-mile delivery windows to avoid peak-traffic congestion (and CO2).' },
-      { type: 'info', text: 'Clear allocation of emissions until the doorstep of the destination.' },
-      { type: 'warning', text: 'Mandatory reporting of fuel use for cross-border trucking under DAP.' },
-      { type: 'danger', text: 'Waiting times at destination increase idling emissions (Buyer responsibility).' }
+      { type: 'info', text: 'The Seller contracts transport to the named place of destination and holds primary data for almost the whole journey (Seller\'s Scope 3 Category 4).' },
+      { type: 'warning', text: 'Unloading and any on-carriage after the named place are arranged by the Buyer.' },
+      { type: 'danger', text: 'The Buyer has no carrier contract for the main journey and depends on the Seller for its inbound transport data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Agree a data-sharing clause so that the Buyer receives the Seller\'s carrier data with the delivery documents.' }
     ],
     insights: [
       { type: 'tip', text: 'Great for e-commerce or regular B2B road freight.' },
@@ -508,14 +508,14 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     responsibilities: {
       export: 'Seller',
       mainTransport: 'Seller',
-      insurance: 'Seller',
+      insurance: 'Optional',
       import: 'Buyer'
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 90, buyerPercentage: 10 },
-      costTransferPoint: 'Named destination',
+      costTransferPoint: 'Named place of destination',
       customs: { export: 'Seller', transit: 'Seller', import: 'Buyer' },
-      insurance: { responsible: 'Seller', minimumCoverage: 'Seller usually insures until point of delivery' },
+      insurance: { responsible: 'Seller', minimumCoverage: 'No obligation under Incoterms® 2020; the seller bears the risk until delivery' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'Named destination, ready for unloading', notices: 'Seller must notify Buyer for unloading preparation' }
     }
@@ -535,33 +535,33 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
     sellerCarbonControl: 98,
     buyerCarbonControl: 2,
     scope3Allocation: [
-      { label: 'Seller Scope 1/2', percentage: 5, color: 'bg-blue-600' },
-      { label: 'Seller Scope 3 Cat 9', percentage: 93, color: 'bg-blue-400' },
-      { label: 'Buyer Scope 3 Cat 4', percentage: 2, color: 'bg-orange-500' }
+      { label: 'Seller own sites (Scope 1/2)', percentage: 5, color: 'bg-blue-600' },
+      { label: 'Seller-contracted transport', percentage: 93, color: 'bg-blue-400' },
+      { label: 'Buyer-contracted transport', percentage: 2, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'tip', text: 'DDP offers the Seller total control to implement "Net Zero" logistics end-to-end.' },
-      { type: 'danger', text: 'Carbon Border Adjustment Mechanism (CBAM) complicates DDP tax filings.' },
-      { type: 'warning', text: 'Seller must include all international legs in their Scope 3 disclosure.' },
-      { type: 'info', text: 'Highest transparency for the Buyer, as they inherit a carbon-cleared product.' }
+      { type: 'info', text: 'The Seller contracts the whole journey, including import clearance, and holds all primary transport data (Seller\'s Scope 3 Category 4).' },
+      { type: 'warning', text: 'Only unloading at the named place of destination is arranged by the Buyer.' },
+      { type: 'danger', text: 'The Buyer depends entirely on the Seller for inbound transport data (Buyer\'s Scope 3 Category 4).' },
+      { type: 'tip', text: 'Buyers that receive data requests from their own customers should agree data sharing with the Seller before choosing DDP.' }
     ],
     insights: [
       { type: 'danger', text: 'Maximum risk for Seller. Everything is their responsibility until delivery.' },
       { type: 'warning', text: 'Seller MUST be able to get a VAT/Tax ID in the Buyer\'s country.' },
-      { type: 'info', text: 'Buyer literally does nothing but receive the cargo.' },
+      { type: 'info', text: 'Buyer only takes delivery and unloads; the Seller handles export, carriage and import clearance.' },
       { type: 'tip', text: 'Use for small parcels or internal company intra-movements.' }
     ],
     responsibilities: {
       export: 'Seller',
       mainTransport: 'Seller',
-      insurance: 'Seller',
+      insurance: 'Optional',
       import: 'Seller'
     },
     detailedAnalysis: {
       costAllocation: { sellerPercentage: 98, buyerPercentage: 2 },
-      costTransferPoint: 'Buyer\'s destination',
+      costTransferPoint: 'Named place of destination',
       customs: { export: 'Seller', transit: 'Seller', import: 'Seller' },
-      insurance: { responsible: 'Seller', minimumCoverage: 'Seller covers all risks until final delivery' },
+      insurance: { responsible: 'Seller', minimumCoverage: 'No obligation under Incoterms® 2020; the seller bears the risk until delivery' },
       transport: { contracting: 'Seller' },
       delivery: { point: 'Buyer\'s destination, cleared for import', notices: 'Seller must notify Buyer for unloading' }
     }

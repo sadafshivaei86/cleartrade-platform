@@ -15,6 +15,17 @@ export default function App() {
 
   const currentStep = DECISION_TREE[currentStepId];
 
+  // Progress bar: shortest number of questions still to come from a step. If any answer
+  // at the current step leads to a further question, at least one open segment is kept,
+  // so the bar is full only on a question that is certainly the last one.
+  const minRemaining = (stepId: string): number => {
+    const step = DECISION_TREE[stepId];
+    if (!step) return 0;
+    return Math.min(...step.options.map(o => (o.nextStep ? 1 + minRemaining(o.nextStep) : 0)));
+  };
+  const anyOptionContinues = !!currentStep?.options.some(o => o.nextStep);
+  const progressSegments = history.length + 1 + Math.max(minRemaining(currentStepId), anyOptionContinues ? 1 : 0);
+
   const handleOptionSelect = (option: typeof DECISION_TREE[string]['options'][number]) => {
     if (option.result) {
       setResult(option.result);
@@ -152,7 +163,7 @@ export default function App() {
                   >
                     {/* Progress Indicator */}
                     <div className="flex items-center gap-2 mb-12">
-                      {Array.from({ length: 4 }).map((_, i) => (
+                      {Array.from({ length: progressSegments }).map((_, i) => (
                         <div 
                           key={i} 
                           className={`h-1.5 rounded-full flex-1 transition-all duration-700 ease-in-out ${
@@ -245,14 +256,14 @@ export default function App() {
                 </p>
               </div>
               <p className="text-slate-500 max-w-sm font-medium leading-relaxed text-lg">
-                The global benchmark for digital Incoterms® intelligence. Built for modern supply chains.
+                Rule-based decision support for Incoterms® 2020, documentary credits and transport-data access. A thesis prototype for information only, not legal advice.
               </p>
             </div>
             <div className="space-y-6">
               <h5 className="text-white font-black text-xs uppercase tracking-[0.2em] opacity-30">Products</h5>
               <div className="flex flex-col gap-4 text-slate-500 font-bold text-sm">
                 <a href="#" className="hover:text-emerald-400 transition-colors">Risk Engine</a>
-                <a href="#" className="hover:text-emerald-400 transition-colors">CO2 Tracker</a>
+                <a href="#" className="hover:text-emerald-400 transition-colors">Carbon Data Access</a>
                 <a href="#" className="hover:text-emerald-400 transition-colors">Legal Vault</a>
               </div>
             </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Truck, Ship, Check, Info, Shield, Leaf, X, PlusCircle, FileText } from 'lucide-react';
 import { INCOTERMS, type IncotermInfo } from '../data/incoterms';
+import { LEGAL_DATA } from '../data/legalFramework';
 
 interface CompareProps {
   onReset: () => void;
@@ -129,7 +130,7 @@ export default function Compare({ onReset }: CompareProps) {
                     <div className="space-y-8 pt-6 border-t border-slate-50">
                       {/* Sustainability Breakdown */}
                       <div className="space-y-4">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Emissions Analysis</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Transport Data Access (Indicative)</div>
                         <div className="space-y-3">
                           {info.scope3Allocation?.map((item, idx) => (
                             <div key={idx} className="space-y-1">
@@ -189,18 +190,18 @@ export default function Compare({ onReset }: CompareProps) {
                       <div className="space-y-4">
                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Key Documentation Basis</div>
                         <div className="grid gap-2">
-                          {info.requiredDocuments?.map((doc, idx) => (
+                          {(LEGAL_DATA[info.code]?.sellerDocs ?? []).map((doc, idx) => (
                             <div key={idx} className="p-3 bg-slate-50 border border-slate-100 rounded-xl group relative overflow-hidden">
                               <div className="absolute left-0 top-0 w-1 h-full bg-blue-500/20" />
                               <div className="flex justify-between items-start">
-                                <span className="text-[10px] font-bold text-slate-700">{doc}</span>
+                                <span className="text-[10px] font-bold text-slate-700">{doc.name}</span>
                                 <FileText size={10} className="text-slate-300" />
                               </div>
                             </div>
                           ))}
                         </div>
                         <div className="text-[9px] text-slate-400 font-medium italic">
-                          Compliance: Incoterms® 2020 & UCP 600 standards.
+                          Typical seller documents (Incoterms® 2020, UCP 600, ISBP 821); indicative.
                         </div>
                       </div>
 

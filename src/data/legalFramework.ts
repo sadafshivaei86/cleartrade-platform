@@ -1,18 +1,27 @@
-import React from 'react';
+// ClearTrade – documentary compliance data (v1.2)
+// Typical documents per Incoterms® 2020 rule, with references to
+//   - Incoterms® 2020 (ICC 2020), articles A1–A10 / B1–B10
+//   - UCP 600 (ICC 2007), articles 14–28
+//   - ISBP 821 (ICC 2023)
+// Each document states its basis: an obligation allocated by the Incoterms® rule itself,
+// or a document that is needed only if the sales contract or the letter of credit calls for it.
+// The mapping is indicative: actual requirements depend on the sales contract and any letter of credit.
 
 export interface LegalRef {
-  source: 'Incoterms 2020' | 'UCP 600' | 'ISBP 745';
-  article: string;
+  source: 'Incoterms® 2020' | 'UCP 600' | 'ISBP 821';
+  article?: string;
 }
+
+export type DocBasis = 'incoterms' | 'contract';
 
 export interface LegalDoc {
   name: string;
   description: string;
   refs: LegalRef[];
-  isLCRequired: boolean;
+  basis: DocBasis;
   whoPrepares: 'Seller' | 'Buyer';
   legalBasis: string;
-  bankingRequirement?: string;
+  lcNote: string;
   practicalNote: string;
 }
 
@@ -23,846 +32,503 @@ export interface LegalFramework {
   buyerDocs: LegalDoc[];
   note: string;
   isSeaOnly?: boolean;
+  seaAdvisory?: string;
 }
+
+export const DOC_BASIS_LABEL: Record<DocBasis, string> = {
+  incoterms: 'Obligation under the Incoterms® rule',
+  contract: 'Only if the contract or letter of credit requires it'
+};
+
+const inco = (article: string): LegalRef => ({ source: 'Incoterms® 2020', article });
+const ucp = (article: string): LegalRef => ({ source: 'UCP 600', article });
+const isbp: LegalRef = { source: 'ISBP 821' };
+
+// ---------- Documents shared by several rules ----------
+
+const commercialInvoice: LegalDoc = {
+  name: 'Commercial Invoice',
+  description: 'Primary sales document.',
+  refs: [inco('A1'), ucp('Art. 18')],
+  basis: 'incoterms',
+  whoPrepares: 'Seller',
+  legalBasis: 'Incoterms® 2020 Article A1: the seller provides the goods and the commercial invoice in conformity with the contract of sale.',
+  lcNote: 'Under a letter of credit the invoice is examined under UCP 600 Art. 18: issued by the beneficiary, made out in the name of the applicant and in the currency of the credit.',
+  practicalNote: 'The description of the goods must correspond with the description in the credit.'
+};
+
+const packingList: LegalDoc = {
+  name: 'Packing List (if required by contract or LC)',
+  description: 'Details contents, weights and packing.',
+  refs: [inco('A1'), isbp],
+  basis: 'contract',
+  whoPrepares: 'Seller',
+  legalBasis: 'Incoterms® 2020 Article A1: other evidence of conformity only where the contract requires it.',
+  lcNote: 'Presented only if the credit calls for it; its data must not conflict with the invoice or the transport document (UCP 600 Art. 14(d)).',
+  practicalNote: 'Not an Incoterms® obligation in itself, but very commonly agreed.'
+};
+
+const exportDocsSeller: LegalDoc = {
+  name: 'Export licence / export customs documents (where applicable)',
+  description: 'Export clearance.',
+  refs: [inco('A7')],
+  basis: 'incoterms',
+  whoPrepares: 'Seller',
+  legalBasis: 'Incoterms® 2020 Article A7: the seller carries out and pays for export clearance formalities.',
+  lcNote: 'Normally not presented under a letter of credit unless the credit calls for it.',
+  practicalNote: 'Applies where an export licence or declaration is required in the country of export.'
+};
+
+const importDocsBuyer: LegalDoc = {
+  name: 'Import licence / import customs documents (where applicable)',
+  description: 'Destination import clearance.',
+  refs: [inco('B7')],
+  basis: 'incoterms',
+  whoPrepares: 'Buyer',
+  legalBasis: 'Incoterms® 2020 Article B7: the buyer carries out and pays for import clearance formalities.',
+  lcNote: 'Not part of a presentation under a letter of credit.',
+  practicalNote: 'The seller assists with information at the buyer\'s request, risk and cost (A7).'
+};
+
+const buyerOwnInsurance = (code: string, label = 'Cargo insurance'): LegalDoc => ({
+  name: `${label} (if buyer chooses)`,
+  description: `Buyer arranges cover at own expense; seller has no obligation to insure under ${code}.`,
+  refs: [inco('A5/B5')],
+  basis: 'contract',
+  whoPrepares: 'Buyer',
+  legalBasis: `Incoterms® 2020 Articles A5/B5: neither party is obliged to insure under ${code}.`,
+  lcNote: 'Not part of a presentation under a letter of credit.',
+  practicalNote: 'The buyer bears the transit risk under this rule, so cover from the point of delivery is advisable.'
+});
+
+const freightEvidence = (article: string): LegalDoc => ({
+  name: 'Freight evidence / freight prepaid indication (if required by LC)',
+  description: 'Only if separately required.',
+  refs: [ucp(article), isbp],
+  basis: 'contract',
+  whoPrepares: 'Seller',
+  legalBasis: 'Not an Incoterms® document; follows from the terms of the credit.',
+  lcNote: 'Where the credit requires it, the transport document indicates that freight has been paid or prepaid.',
+  practicalNote: 'Usually shown on the transport document itself rather than as a separate paper.'
+});
+
+const sellerInsurance = (code: string, clauses: string, label: string): LegalDoc => ({
+  name: label,
+  description: `Seller must insure: at least Institute Cargo Clauses ${clauses}.`,
+  refs: [inco('A5'), ucp('Art. 28'), isbp],
+  basis: 'incoterms',
+  whoPrepares: 'Seller',
+  legalBasis: `Incoterms® 2020 Article A5: under ${code} the seller obtains cargo insurance complying at least with Institute Cargo Clauses ${clauses}, covering at least 110% of the contract price.`,
+  lcNote: 'Examined under UCP 600 Art. 28: the amount of cover is at least 110% of the CIF or CIP value unless the credit states otherwise.',
+  practicalNote: clauses === '(C)'
+    ? 'Clauses (C) give minimum cover only; the parties may agree a higher level.'
+    : 'Clauses (A) give all-risks cover; the parties may agree a lower level.'
+});
+
+const SEA_ADVISORY = (code: string, alternative: string) =>
+  `${code} is for sea and inland waterway transport only. If goods are handed to a carrier before loading on board, consider ${alternative} instead.`;
+
+// ---------- Rule-by-rule mapping ----------
 
 export const LEGAL_DATA: Record<string, LegalFramework> = {
   EXW: {
     code: 'EXW',
     name: 'Ex Works',
     sellerDocs: [
-      {
-        name: 'Commercial Invoice',
-        description: 'Compulsory accounting document for customs and payment.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 Article A1',
-        bankingRequirement: 'Must be issued by seller, made out to applicant. UCP 600 Art 18 specifies no signature is mandatory unless stated.',
-        practicalNote: 'Must match credit currency and include precise shipping marks as per ISBP 745 Paragraph C1.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Detailed inventory of gross/net weights and dimensions.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 Article A1',
-        practicalNote: 'ISBP 745 specifies document must not conflict with invoice or transport docs.'
-      },
-      {
-        name: 'Proof of delivery at premises',
-        description: 'Confirmation goods are ready/collected at seller gate.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 Article A2',
-        practicalNote: 'Under EXW the seller\'s only delivery obligation is making goods available at their own facility.'
-      }
+      commercialInvoice,
+      packingList
     ],
     buyerDocs: [
       {
-        name: 'Export licence / customs docs',
-        description: 'Formal filing to origin country customs.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
+        name: 'Evidence of having taken delivery',
+        description: 'Confirms the goods were collected at the seller\'s premises.',
+        refs: [inco('B6')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B2',
-        practicalNote: 'Buyer is responsible for export clearance — unusual for a foreign buyer.'
+        legalBasis: 'Incoterms® 2020 Article B6: the buyer provides the seller with appropriate evidence of having taken delivery.',
+        lcNote: 'EXW gives the seller no transport document; a credit asking for one does not fit this rule.',
+        practicalNote: 'Under EXW the seller has no obligation to provide a delivery or transport document (A6).'
       },
       {
-        name: 'Transport booking confirmation',
-        description: 'Evidence of transport arrangement.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }],
-        isLCRequired: false,
+        name: 'Export licence / export customs documents (where applicable)',
+        description: 'Export clearance is the buyer\'s task under EXW.',
+        refs: [inco('B7')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B4',
-        practicalNote: 'The buyer bears all costs and risks from the moment goods are placed at their disposal.'
+        legalBasis: 'Incoterms® 2020 Article B7: the buyer carries out export, transit and import clearance; the seller only assists (A7).',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'Often difficult for a foreign buyer; FCA places export clearance on the seller.'
       },
-      {
-        name: 'Import licence',
-        description: 'Customs clearance at destination.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B2',
-        practicalNote: 'Standard requirement for entry into destination country.'
-      },
-      {
-        name: 'Insurance policy',
-        description: 'If desired for transit protection.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B5',
-        practicalNote: 'Buyer\'s own expense and risk.'
-      }
+      importDocsBuyer,
+      buyerOwnInsurance('EXW')
     ],
-    note: 'Under EXW the buyer is responsible for export clearance — unusual for a foreign buyer. ICC advises using FCA instead for L/C transactions. [Incoterms 2020 · Guidance Note for EXW]'
+    note: 'Under EXW the seller only makes the goods available at its premises. The buyer loads, clears the goods for export and arranges all transport. Where export clearance by the buyer is impractical or a letter of credit is used, FCA is the more suitable rule.'
   },
   FCA: {
     code: 'FCA',
     name: 'Free Carrier',
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Primary record of transacted value for customs.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Proof of delivery to the carrier',
+        description: 'Usual proof that the goods were handed to the buyer\'s carrier at the named place.',
+        refs: [inco('A6')],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Must match credit currency and terms.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the buyer with the usual proof that the goods have been delivered.',
+        lcNote: 'If the credit calls for a transport document, it is examined under the UCP 600 article for that mode of transport (Arts. 19–25).',
+        practicalNote: 'For example a carrier\'s receipt, CMR note or air waybill, depending on the mode of transport.'
       },
       {
-        name: 'Packing List',
-        description: 'Details for logistics and handling.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
+        name: 'Transport document with on-board notation (if agreed)',
+        description: 'Only where the parties agree that the buyer instructs its carrier to issue it to the seller.',
+        refs: [inco('A6/B6'), ucp('Art. 20'), isbp],
+        basis: 'contract',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Essential for warehouse and carrier manifest processing.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Formal export clearance at origin.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 Article A2',
-        practicalNote: 'Unlike EXW, the Seller is responsible for export clearance.'
-      },
-      {
-        name: 'Delivery receipt / CMR / AWB',
-        description: 'Proof of delivery to carrier at named point.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 Article A6',
-        practicalNote: 'Serves as proof that delivery obligation is fulfilled.'
-      },
-      {
-        name: 'On-board B/L (if buyer requests)',
-        description: 'B/L with "on-board" notation for banking.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }, { source: 'UCP 600', article: 'Art. 20' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A6 — 2020 amendment',
-        practicalNote: 'Incoterms 2020 added a new provision allowing FCA sellers to obtain an on-board Bill of Lading at the buyer\'s request.'
+        legalBasis: 'Incoterms® 2020 Articles A6/B6: if agreed, the buyer instructs the carrier to issue a transport document stating that the goods have been loaded.',
+        lcNote: 'Needed when a letter of credit requires an on-board bill of lading although delivery takes place before loading.',
+        practicalNote: 'Option introduced in Incoterms® 2020; it must be agreed in the contract.'
       }
     ],
     buyerDocs: [
       {
-        name: 'Transport booking (main carriage)',
-        description: 'Instructions to selected carrier.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }],
-        isLCRequired: false,
+        name: 'Carrier nomination / transport instructions',
+        description: 'Name of the carrier and time and place of handover.',
+        refs: [inco('B4'), inco('B10')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B4',
-        practicalNote: 'Buyer contracts for and pays main carriage.'
+        legalBasis: 'Incoterms® 2020 Articles B4 and B10: the buyer contracts the carriage and gives the seller sufficient notice.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'Without timely notice the buyer bears the resulting risks and costs.'
       },
-      {
-        name: 'Import licence',
-        description: 'Documentation for entry at destination.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B2',
-        practicalNote: 'Buyer clears customs at destination.'
-      },
-      {
-        name: 'Insurance policy',
-        description: 'Optional transit protection.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 Article B5',
-        practicalNote: 'Highly recommended for international transit.'
-      }
+      importDocsBuyer,
+      buyerOwnInsurance('FCA')
     ],
-    note: 'Incoterms 2020 added a new provision allowing FCA sellers to obtain an on-board Bill of Lading at the buyer\'s request and cost — resolving the long-standing L/C conflict.'
+    note: 'Under FCA the seller delivers to the buyer\'s carrier at the named place and clears the goods for export. Incoterms® 2020 allows the parties to agree that the buyer instructs its carrier to issue an on-board transport document to the seller, which helps where a letter of credit requires one.'
   },
   CPT: {
     code: 'CPT',
     name: 'Carriage Paid To',
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Bill of sale for goods.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Transport document',
+        description: 'Usual transport document for the carriage contracted by the seller.',
+        refs: [inco('A6'), ucp('Arts. 19–25'), isbp],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Must specify delivery to named destination.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the usual transport document for the contracted carriage.',
+        lcNote: 'Examined under the UCP 600 article for the mode of transport, e.g. Art. 19 (multimodal), Art. 23 (air) or Art. 24 (road and rail).',
+        practicalNote: 'It must cover the contract goods and be dated within the agreed shipment period.'
       },
-      {
-        name: 'Packing List',
-        description: 'Details of shipment contents.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Standard requirement for multimodal.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Export clearance at origin.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller handles origin formalities.'
-      },
-      {
-        name: 'Multimodal Transport Document',
-        description: 'B/L or Air Waybill showing freight prepaid.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }, { source: 'UCP 600', article: 'Art. 19' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        bankingRequirement: 'UCP 600 Art. 19. Must show "Freight Prepaid" to destination.',
-        practicalNote: 'CPT does not require the seller to provide insurance.'
-      },
-      {
-        name: 'Freight paid endorsement',
-        description: 'Notation proving seller paid carriage.',
-        refs: [{ source: 'UCP 600', article: 'Art. 19c(ii)' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'UCP 600 Article 19c(ii)',
-        practicalNote: 'Critical for C terms where seller contracts for carriage.'
-      }
+      freightEvidence('Arts. 19–25')
     ],
     buyerDocs: [
-      {
-        name: 'Import licence',
-        description: 'Customs filing for destination entry.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer clears customs at destination.'
-      },
-      {
-        name: 'Insurance policy',
-        description: 'Procured at own expense.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Risk transfers to buyer at first carrier.'
-      }
+      importDocsBuyer,
+      buyerOwnInsurance('CPT')
     ],
-    note: 'CPT does not require the seller to provide insurance. The transport document must show freight prepaid to named destination. [UCP 600 · Art. 19] [ISBP 745 · Para. E]'
+    note: 'Under CPT the seller contracts and pays carriage to the named place of destination, but risk passes to the buyer when the goods are handed to the first carrier. The seller has no obligation to insure.'
   },
   CIP: {
     code: 'CIP',
     name: 'Carriage and Insurance Paid To',
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Primary valuation doc.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Transport document',
+        description: 'Usual transport document for the carriage contracted by the seller.',
+        refs: [inco('A6'), ucp('Arts. 19–25'), isbp],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Standard.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the usual transport document for the contracted carriage.',
+        lcNote: 'Examined under the UCP 600 article for the mode of transport, e.g. Art. 19 (multimodal), Art. 23 (air) or Art. 24 (road and rail).',
+        practicalNote: 'It must cover the contract goods and be dated within the agreed shipment period.'
       },
-      {
-        name: 'Packing List',
-        description: 'Detailed inventory.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Essential for multimodal routes.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Export clearance at origin.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller responsibility.'
-      },
-      {
-        name: 'Multimodal Transport Document',
-        description: 'Negotiable or non-negotiable transport receipt.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }, { source: 'UCP 600', article: 'Art. 19' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        practicalNote: 'Must show freight prepaid.'
-      },
-      {
-        name: 'Insurance Policy / Certificate',
-        description: 'Negotiable doc covering All Risks (ICC A).',
-        refs: [{ source: 'Incoterms 2020', article: 'A5' }, { source: 'UCP 600', article: 'Art. 28' }, { source: 'ISBP 745', article: 'Para. K' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A5',
-        bankingRequirement: 'Minimum 110% CIF/CIP value coverage. UCP 600 Art 28 governs.',
-        practicalNote: 'Incoterms 2020 upgraded CIP minimum insurance from ICC \'C\' to ICC \'A\' (All Risks).'
-      }
+      sellerInsurance('CIP', '(A)', 'Insurance policy / certificate'),
+      freightEvidence('Arts. 19–25')
     ],
     buyerDocs: [
+      importDocsBuyer,
       {
-        name: 'Import licence',
-        description: 'Destination customs filing.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
+        name: 'Additional insurance (if buyer chooses)',
+        description: 'Only if the buyer wants cover beyond the seller\'s policy.',
+        refs: [inco('B5')],
+        basis: 'contract',
         whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer responsibility.'
-      },
-      {
-        name: 'Additional insurance (optional)',
-        description: 'Extra coverage if needed.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Buyer may want higher limits or specific risks covered.'
+        legalBasis: 'Incoterms® 2020 Article B5: the buyer has no obligation to insure.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'The seller provides information for additional cover at the buyer\'s request, risk and cost.'
       }
     ],
-    note: 'Incoterms 2020 upgraded CIP minimum insurance from ICC \'C\' to ICC \'A\'. The insurance certificate presented under an L/C must cover at least 110% of CIF/CIP value. [UCP 600 · Art. 28f(ii)] [ISBP 745 · Para. K9]'
+    note: 'Under CIP the seller contracts carriage and insures the goods to the named place of destination. Incoterms® 2020 raised the minimum cover for CIP to Institute Cargo Clauses (A). Risk still passes to the buyer when the goods are handed to the first carrier.'
   },
   DAP: {
     code: 'DAP',
     name: 'Delivered at Place',
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Record of sale.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Document enabling the buyer to take delivery',
+        description: 'For example a delivery order or the transport document.',
+        refs: [inco('A6')],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Standard.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Details for unloading and receipt.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Needed by both parties at destination.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Export clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller clears export.'
-      },
-      {
-        name: 'Transport Document (any mode)',
-        description: 'Evidence of carriage to destination.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        practicalNote: 'Rarely negotiable.'
-      },
-      {
-        name: 'Delivery order / arrival notice',
-        description: 'Instructions for actual site delivery.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        practicalNote: 'Coordination for delivery is critical.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides any document required to enable the buyer to take over the goods.',
+        lcNote: 'Delivery takes place at destination, so a credit asking for an on-board bill of lading fits this rule poorly; the document should be agreed in advance.',
+        practicalNote: 'Risk stays with the seller until the goods are placed at the buyer\'s disposal, ready for unloading.'
       }
     ],
     buyerDocs: [
-      {
-        name: 'Import licence / customs docs',
-        description: 'Destination entry filings.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer clears import.'
-      },
+      importDocsBuyer,
       {
         name: 'Unloading arrangements',
-        description: 'Equipment/labor for offloading.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }],
-        isLCRequired: false,
+        description: 'The buyer unloads at the named place of destination.',
+        refs: [inco('B2')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Article B4',
-        practicalNote: 'Buyer is responsible for unloading at DAP named place.'
-      },
-      {
-        name: 'Insurance (own expense)',
-        description: 'Risk protection.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Buyer should insure once risk transfers at destination gate.'
+        legalBasis: 'Incoterms® 2020 Article B2: the buyer takes delivery of the goods on the arriving means of transport.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'Waiting costs at destination caused by late unloading are normally for the buyer.'
       }
     ],
-    note: 'DAP is rarely used with a standard L/C because the transport document may not be a negotiable bill of lading. Parties should agree on an acceptable document type under UCP 600 Art. 14. [UCP 600 · Art. 14] [Incoterms 2020 · A6]'
+    note: 'Under DAP the seller bears costs and risk to the named place of destination, ready for unloading. The buyer unloads and clears the goods for import. Neither party is obliged to insure, but the seller carries the transit risk.'
   },
   DPU: {
     code: 'DPU',
     name: 'Delivered at Place Unloaded',
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Standard invoice.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Document enabling the buyer to take delivery',
+        description: 'For example a delivery order or evidence that the goods have been unloaded.',
+        refs: [inco('A6')],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Must specify unloaded status.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Detailed weights/measures.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Needed for unloading tally.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Origin clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller responsibility.'
-      },
-      {
-        name: 'Transport Document',
-        description: 'Proof of carriage.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        practicalNote: 'Standard.'
-      },
-      {
-        name: 'Unloading confirmation / receipt',
-        description: 'Proof that offloading was completed by seller.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A6',
-        practicalNote: 'The only Incoterm where the seller must unload at destination. Delivery evidence must prove unloading.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides any document required to enable the buyer to take over the goods.',
+        lcNote: 'Delivery takes place at destination, so a credit asking for an on-board bill of lading fits this rule poorly; the document should be agreed in advance.',
+        practicalNote: 'DPU is the only rule under which the seller unloads at destination; risk passes once unloading is complete.'
       }
     ],
     buyerDocs: [
-      {
-        name: 'Import licence / customs docs',
-        description: 'Import duty and tax filing.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer clears import.'
-      },
-      {
-        name: 'Insurance (own expense)',
-        description: 'Risk protection post-unloading.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Buyer responsibility.'
-      }
+      importDocsBuyer
     ],
-    note: 'DPU (formerly DAT) is the only Incoterm where the seller must unload at destination. The delivery evidence document must prove unloading is complete. [Incoterms 2020 · A6, Guidance Note]'
+    note: 'Under DPU the seller bears costs and risk until the goods are unloaded at the named place of destination. The buyer clears the goods for import. Neither party is obliged to insure, but the seller carries the transit risk.'
   },
   DDP: {
     code: 'DDP',
     name: 'Delivered Duty Paid',
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Bill of sale.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Import licence / import customs documents and duty payment',
+        description: 'Import clearance is the seller\'s task under DDP.',
+        refs: [inco('A7')],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Includes all costs including duties.'
+        legalBasis: 'Incoterms® 2020 Article A7: under DDP the seller carries out and pays for export, transit and import clearance.',
+        lcNote: 'Not normally part of a presentation under a letter of credit.',
+        practicalNote: 'The seller must be able to act as importer in the buyer\'s country; if it cannot, DAP is the suitable rule.'
       },
       {
-        name: 'Packing List',
-        description: 'Shipment detail.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
+        name: 'Document enabling the buyer to take delivery',
+        description: 'For example a delivery order or the transport document.',
+        refs: [inco('A6')],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Essential for import audit.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Origin clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Standard.'
-      },
-      {
-        name: 'Import customs clearance docs',
-        description: 'SAD or equivalent at destination.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A2',
-        practicalNote: 'Seller responsibility — must act as importer of record.'
-      },
-      {
-        name: 'Duty payment receipt / SAD',
-        description: 'Proof of tax settlement at destination.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Required to prove delivery duty paid.'
-      },
-      {
-        name: 'Transport Document',
-        description: 'Carriage evidence.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        practicalNote: 'Standard.'
-      },
-      {
-        name: 'Delivery receipt at destination',
-        description: 'Proof of door delivery.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A6',
-        practicalNote: 'End of seller risk.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides any document required to enable the buyer to take over the goods.',
+        lcNote: 'Delivery takes place at destination, so a credit asking for an on-board bill of lading fits this rule poorly; the document should be agreed in advance.',
+        practicalNote: 'Risk stays with the seller until the goods are placed at the buyer\'s disposal, ready for unloading.'
       }
     ],
     buyerDocs: [
       {
-        name: '(Minimal — unloading only)',
-        description: 'Offloading from arriving vehicle.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }],
-        isLCRequired: false,
+        name: 'Unloading arrangements',
+        description: 'The buyer unloads at the named place of destination.',
+        refs: [inco('B2')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 · B4',
-        practicalNote: 'Buyer\'s only duty.'
+        legalBasis: 'Incoterms® 2020 Article B2: the buyer takes delivery of the goods on the arriving means of transport.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'The buyer assists the seller with import information at the seller\'s request, risk and cost (B7).'
       }
     ],
-    note: 'DDP requires the seller to hold importer-of-record status in the buyer\'s country. ICC strongly advises confirming regulatory feasibility before agreeing DDP.'
+    note: 'DDP places the maximum obligation on the seller, including import clearance and duties. The parties should confirm before agreeing DDP that the seller is able to clear the goods for import in the buyer\'s country.'
   },
   FAS: {
     code: 'FAS',
     name: 'Free Alongside Ship',
     isSeaOnly: true,
+    seaAdvisory: SEA_ADVISORY('FAS', 'FCA'),
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Document of sale.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Proof of delivery alongside the vessel',
+        description: 'Usual proof of delivery, e.g. a dock or quay receipt.',
+        refs: [inco('A6')],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Sea/inland waterway.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Weights/dims for dock handling.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Needed for wharfage calculations.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Export clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller responsibility.'
-      },
-      {
-        name: 'Alongside receipt / dock receipt',
-        description: 'Proof of delivery to quay side.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A6',
-        practicalNote: 'Alongside receipt is not a negotiable document.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the usual proof of delivery and assists the buyer in obtaining a transport document.',
+        lcNote: 'A dock receipt is not a bill of lading; a credit requiring an on-board bill of lading depends on the buyer\'s carrier.',
+        practicalNote: 'Delivery takes place before loading, so damage during loading is at the buyer\'s risk.'
       }
     ],
     buyerDocs: [
       {
         name: 'Vessel nomination',
-        description: 'Instruction to terminal for arrival.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }],
-        isLCRequired: false,
+        description: 'Vessel name, loading point and delivery time.',
+        refs: [inco('B4'), inco('B10')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Incoterms 2020 · B4',
-        practicalNote: 'Buyer select vessel.'
+        legalBasis: 'Incoterms® 2020 Articles B4 and B10: the buyer contracts the carriage and gives the seller sufficient notice.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'Without timely notice the buyer bears the resulting risks and costs.'
       },
-      {
-        name: 'Bill of Lading (via own carrier)',
-        description: 'Negotiable status receipt.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }, { source: 'UCP 600', article: 'Art. 20' }],
-        isLCRequired: true,
-        whoPrepares: 'Buyer',
-        legalBasis: 'UCP 600 · Art. 20',
-        practicalNote: 'Buyer contracts for carriage.'
-      },
-      {
-        name: 'Import licence',
-        description: 'Destination clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Standard.'
-      },
-      {
-        name: 'Marine Insurance',
-        description: 'Sea voyage protection.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Risk transfers alongside ship.'
-      }
+      importDocsBuyer,
+      buyerOwnInsurance('FAS', 'Marine insurance')
     ],
-    note: 'FAS is used for bulk/breakbulk cargo. The alongside receipt is not a negotiable document — parties using L/Cs should clarify acceptable evidence of delivery. [UCP 600 · Art. 14c]'
+    note: 'Under FAS the seller delivers alongside the vessel at the named port of shipment and clears the goods for export. Loading on board and the sea carriage are the buyer\'s responsibility.'
   },
   FOB: {
     code: 'FOB',
     name: 'Free On Board',
     isSeaOnly: true,
+    seaAdvisory: SEA_ADVISORY('FOB', 'FCA'),
     sellerDocs: [
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
-        name: 'Commercial Invoice',
-        description: 'Invoice for goods.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
+        name: 'Proof of delivery on board (usually an on-board Bill of Lading)',
+        description: 'Evidences shipment on board.',
+        refs: [inco('A6'), ucp('Art. 20'), isbp],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Standard.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Details for port handling.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Essential for stowage plan.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Export clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller responsibility.'
-      },
-      {
-        name: 'On-board Bill of Lading',
-        description: 'Negotiable transport doc with notation.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }, { source: 'UCP 600', article: 'Art. 20' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A6',
-        bankingRequirement: 'Must show "on board" notation per ISBP 745 Para. E6.',
-        practicalNote: 'The Bill of Lading is the most critical document under FOB L/C transactions.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the usual proof of delivery and assists the buyer in obtaining a transport document.',
+        lcNote: 'A bill of lading is examined under UCP 600 Art. 20: it indicates shipment on board a named vessel at the port of loading stated in the credit.',
+        practicalNote: 'The carrier is contracted by the buyer, so the bill of lading is issued by the buyer\'s carrier.'
       }
     ],
     buyerDocs: [
       {
-        name: 'Vessel nomination / freight booking',
-        description: 'Instructions to selected vessel.',
-        refs: [{ source: 'Incoterms 2020', article: 'B4' }],
-        isLCRequired: false,
+        name: 'Vessel nomination',
+        description: 'Vessel name, loading point and delivery time.',
+        refs: [inco('B4'), inco('B10')],
+        basis: 'incoterms',
         whoPrepares: 'Buyer',
-        legalBasis: 'Article B4',
-        practicalNote: 'Buyer select vessel/carrier.'
+        legalBasis: 'Incoterms® 2020 Articles B4 and B10: the buyer contracts the carriage and gives the seller sufficient notice.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'Without timely notice the buyer bears the resulting risks and costs.'
       },
-      {
-        name: 'Import licence',
-        description: 'Clearance at destination.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer responsibility.'
-      },
-      {
-        name: 'Marine Insurance',
-        description: 'Sea voyage protection.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Risk transfers post-loading (on board).'
-      }
+      importDocsBuyer,
+      buyerOwnInsurance('FOB', 'Marine insurance')
     ],
-    note: 'The Bill of Lading is the most critical document under FOB L/C transactions. It must be a full set of originals and carry the on-board notation with date. [UCP 600 · Art. 20] [ISBP 745 · Para. E2–E8]'
+    note: 'Under FOB the seller delivers the goods on board the vessel nominated by the buyer and clears them for export. The buyer contracts and pays the sea carriage.'
   },
   CFR: {
     code: 'CFR',
     name: 'Cost and Freight',
     isSeaOnly: true,
+    seaAdvisory: SEA_ADVISORY('CFR', 'FCA/CPT'),
     sellerDocs: [
-      {
-        name: 'Commercial Invoice',
-        description: 'Bill of sale.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Must specify named port of destination.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Weights/dims for vessel loading.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1',
-        practicalNote: 'Standard requirement.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Export clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller clears export.'
-      },
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
         name: 'On-board Bill of Lading',
-        description: 'Full set of originals, freight prepaid.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }, { source: 'UCP 600', article: 'Art. 20' }],
-        isLCRequired: true,
+        description: 'Usual transport document; evidences shipment on board.',
+        refs: [inco('A6'), ucp('Art. 20'), isbp],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A6',
-        bankingRequirement: 'Must show "freight prepaid" per UCP 600 Art. 20a(iii).',
-        practicalNote: 'Seller pays freight but does not insure.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the usual transport document for the agreed port of destination.',
+        lcNote: 'Examined under UCP 600 Art. 20: it indicates shipment on board a named vessel at the port of loading stated in the credit.',
+        practicalNote: 'It must enable the buyer to claim the goods from the carrier at the port of destination.'
       },
-      {
-        name: 'Freight invoice (if separate)',
-        description: 'Additional proof of payment.',
-        refs: [{ source: 'ISBP 745', article: 'Para. C6' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'ISBP 745 Paragraph C6',
-        practicalNote: 'Must not conflict with B/L freight notation.'
-      }
+      freightEvidence('Art. 20')
     ],
     buyerDocs: [
-      {
-        name: 'Import licence',
-        description: 'Destination customs entry.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer clears import.'
-      },
-      {
-        name: 'Marine Insurance (own expense)',
-        description: 'Sea voyage protection.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Risk transfers to buyer on board vessel at loading port.'
-      }
+      importDocsBuyer,
+      buyerOwnInsurance('CFR', 'Marine insurance')
     ],
-    note: 'Under CFR the seller pays freight but does not insure. The B/L must show "freight prepaid." [UCP 600 · Art. 14d] [ISBP 745 · Para. E4]'
+    note: 'Under CFR the seller contracts and pays the sea freight to the named port of destination but does not insure. Risk passes to the buyer when the goods are on board at the port of shipment.'
   },
   CIF: {
     code: 'CIF',
     name: 'Cost, Insurance and Freight',
     isSeaOnly: true,
+    seaAdvisory: SEA_ADVISORY('CIF', 'FCA/CIP'),
     sellerDocs: [
-      {
-        name: 'Commercial Invoice',
-        description: 'Accounting/settlement document.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'UCP 600', article: 'Art. 18' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A1/B1',
-        practicalNote: 'Consistency between Invoice, B/L, and Insurance is vital.'
-      },
-      {
-        name: 'Packing List',
-        description: 'Manifest detail for sea transport.',
-        refs: [{ source: 'Incoterms 2020', article: 'A1' }, { source: 'ISBP 745', article: 'Para. C1' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A1',
-        practicalNote: 'Must match marks on B/L.'
-      },
-      {
-        name: 'Export licence / customs docs',
-        description: 'Origin clearance.',
-        refs: [{ source: 'Incoterms 2020', article: 'A2' }],
-        isLCRequired: false,
-        whoPrepares: 'Seller',
-        legalBasis: 'Article A2',
-        practicalNote: 'Seller responsibility.'
-      },
+      commercialInvoice,
+      packingList,
+      exportDocsSeller,
       {
         name: 'On-board Bill of Lading',
-        description: 'Full set of negotiable originals.',
-        refs: [{ source: 'Incoterms 2020', article: 'A6' }, { source: 'UCP 600', article: 'Art. 20' }],
-        isLCRequired: true,
+        description: 'Usual transport document; evidences shipment on board.',
+        refs: [inco('A6'), ucp('Art. 20'), isbp],
+        basis: 'incoterms',
         whoPrepares: 'Seller',
-        legalBasis: 'UCP 600 · Art. 20',
-        bankingRequirement: 'On-board notation with date required. Must show freight prepaid.',
-        practicalNote: 'The most document-intensive term for L/C transactions.'
+        legalBasis: 'Incoterms® 2020 Article A6: the seller provides the usual transport document for the agreed port of destination.',
+        lcNote: 'Examined under UCP 600 Art. 20: it indicates shipment on board a named vessel at the port of loading stated in the credit.',
+        practicalNote: 'It must enable the buyer to claim the goods from the carrier at the port of destination.'
       },
-      {
-        name: 'Marine Insurance Policy/Certificate',
-        description: 'Covering sea risks (ICC C minimum).',
-        refs: [{ source: 'Incoterms 2020', article: 'A5' }, { source: 'UCP 600', article: 'Art. 28' }, { source: 'ISBP 745', article: 'Para. K' }],
-        isLCRequired: true,
-        whoPrepares: 'Seller',
-        legalBasis: 'Incoterms 2020 · A5',
-        bankingRequirement: 'Must cover 110% of CIF value in L/C currency.',
-        practicalNote: 'CIF only requires ICC \'C\' (limited risks) cover. Upgrade may be required by contract.'
-      }
+      sellerInsurance('CIF', '(C)', 'Marine insurance policy / certificate'),
+      freightEvidence('Art. 20')
     ],
     buyerDocs: [
+      importDocsBuyer,
       {
-        name: 'Import licence',
-        description: 'Destination clearance docs.',
-        refs: [{ source: 'Incoterms 2020', article: 'B2' }],
-        isLCRequired: false,
+        name: 'Additional insurance (if buyer chooses)',
+        description: 'Only if the buyer wants cover beyond the seller\'s minimum policy.',
+        refs: [inco('B5')],
+        basis: 'contract',
         whoPrepares: 'Buyer',
-        legalBasis: 'Article B2',
-        practicalNote: 'Buyer clears customs.'
-      },
-      {
-        name: 'Additional insurance (optional)',
-        description: 'Extra coverage if ICC C is insufficient.',
-        refs: [{ source: 'Incoterms 2020', article: 'B5' }],
-        isLCRequired: false,
-        whoPrepares: 'Buyer',
-        legalBasis: 'Article B5',
-        practicalNote: 'Buyer responsibility.'
+        legalBasis: 'Incoterms® 2020 Article B5: the buyer has no obligation to insure.',
+        lcNote: 'Not part of a presentation under a letter of credit.',
+        practicalNote: 'The seller provides information for additional cover at the buyer\'s request, risk and cost.'
       }
     ],
-    note: 'CIF is the most document-intensive term for L/C transactions. Three core documents — Invoice, B/L, and Insurance — must be consistent in description, value, and currency.'
+    note: 'Under CIF the seller contracts the sea freight and insures the goods with at least Institute Cargo Clauses (C). Invoice, bill of lading and insurance document must be consistent with each other. Risk passes to the buyer when the goods are on board at the port of shipment.'
   }
 };
+
+// Reference list shown in the Standards library
+export const STANDARD_SOURCES = [
+  {
+    id: 1,
+    citation: 'International Chamber of Commerce (ICC). (2020). Incoterms® 2020: ICC Rules for the Use of Domestic and International Trade Terms. ICC Services, Paris.',
+    notes: ['Articles A1–A10 and B1–B10 of the eleven rules: risk transfer, costs, carriage, insurance, documents and clearance']
+  },
+  {
+    id: 2,
+    citation: 'International Chamber of Commerce (ICC). (2007). Uniform Customs and Practice for Documentary Credits (UCP 600). ICC Publication No. 600. ICC Services, Paris.',
+    notes: ['Articles used: 14 (examination of documents), 18 (commercial invoice), 19–25 (transport documents), 28 (insurance document)']
+  },
+  {
+    id: 3,
+    citation: 'International Chamber of Commerce (ICC). (2023). International Standard Banking Practice for the Examination of Documents under UCP 600 (ISBP 821). ICC Services, Paris.',
+    notes: ['Practice reference for examining invoices, transport documents and insurance documents']
+  },
+  {
+    id: 4,
+    citation: 'World Resources Institute & World Business Council for Sustainable Development. (2011). Corporate Value Chain (Scope 3) Accounting and Reporting Standard. GHG Protocol.',
+    notes: ['Category 4 (upstream transportation and distribution) and Category 9 (downstream transportation and distribution)']
+  },
+  {
+    id: 5,
+    citation: 'Directive (EU) 2022/2464 (Corporate Sustainability Reporting Directive), as amended by Directive (EU) 2026/470.',
+    notes: ['Scope of mandatory sustainability reporting and limits on value-chain data requests to smaller undertakings']
+  }
+];
