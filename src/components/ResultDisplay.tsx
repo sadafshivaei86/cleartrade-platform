@@ -224,7 +224,7 @@ const getDataRoadmap = (code: string, sellerShare: number): DataRoadmap => {
 
   if (buyerContracts) {
     return {
-      rating: code === 'EXW' ? 'Buyer holds all transport data' : 'Buyer holds main-carriage data',
+      rating: code === 'EXW' ? 'Buyer contracts all transport' : 'Buyer contracts the main carriage',
       ratingColor,
       contracting: contracting[code],
       dependentParty: 'Seller',
@@ -239,7 +239,7 @@ const getDataRoadmap = (code: string, sellerShare: number): DataRoadmap => {
     };
   }
   return {
-    rating: 'Seller holds main-carriage data',
+    rating: 'Seller contracts the main carriage',
     ratingColor,
     contracting: contracting[code] || contracting['DAP'],
     dependentParty: 'Buyer',
@@ -286,7 +286,7 @@ const getGreenerSuggestionsSeparate = (currentCode: string): SplitGreenerSuggest
   };
 
   const seller: Record<string, GreenerOption[]> = {
-    EXW: [{ code: 'FCA', reason: 'Under FCA the seller loads the goods, clears them for export and, if another place is named, arranges pre-carriage, so it controls and can document the first part of the journey.' }],
+    EXW: [{ code: 'FCA', reason: 'Under FCA the seller loads the goods, clears them for export and, if another place is named, arranges pre-carriage, so it arranges the first part of the journey and can request data for it.' }],
     FCA: [{ code: 'CPT', reason: 'Under CPT the seller contracts the main carriage and receives the carrier\'s emission data directly; risk still passes when the goods are handed to the first carrier.' }],
     FAS: [{ code: 'FOB', reason: 'Under FOB the seller also controls loading on board. To hold the sea-voyage data as well, CFR would be the next step.' }],
     FOB: [{ code: 'CFR', reason: 'Under CFR the seller contracts the vessel and receives the carrier\'s emission data directly; risk still passes on board at the port of shipment.' }],
@@ -349,7 +349,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Unloading and terminal handling at destination',
           'Import clearance and on-carriage'
         ],
-        insight: 'FCA gives the seller control up to the named place of delivery, while the buyer contracts the main carriage and holds its emission data.'
+        insight: 'FCA gives the seller control up to the named place of delivery, while the buyer contracts the main carriage and is the party to ask for its emission data.'
       };
     case 'FAS':
       return {
@@ -362,7 +362,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Sea carriage contract and carrier emission data',
           'Unloading, import clearance and on-carriage'
         ],
-        insight: 'Under FAS the seller\'s data covers the journey to the quay. Loading and the sea voyage are contracted by the buyer, who holds that data.'
+        insight: 'Under FAS the seller\'s data covers the journey to the quay. Loading and the sea voyage are contracted by the buyer, who is the party to ask for that data.'
       };
     case 'FOB':
       return {
@@ -375,7 +375,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Unloading and terminal handling at destination',
           'Import clearance and on-carriage'
         ],
-        insight: 'Under FOB the seller\'s data covers the journey up to loading on board. The sea voyage is contracted by the buyer, who holds that data.'
+        insight: 'Under FOB the seller\'s data covers the journey up to loading on board. The sea voyage is contracted by the buyer, who is the party to ask for that data.'
       };
     case 'CFR':
     case 'CIF':
@@ -393,7 +393,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Onward delivery from the destination port',
           'Any additional transport and distribution after the named port of destination'
         ],
-        insight: `Under ${up} the seller contracts the sea carriage and can obtain its emission data, while the risk already passes to the buyer on board at the port of shipment. The buyer needs the seller's carrier data to report its inbound transport.`
+        insight: `Under ${up} the seller contracts the sea carriage and is best placed to request its emission data, while the risk already passes to the buyer on board at the port of shipment. The buyer needs the seller's carrier data to report its inbound transport.`
       };
     case 'CPT':
     case 'CIP':
@@ -410,7 +410,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Import customs clearance and tariff duties',
           'On-carriage after the named place of destination'
         ],
-        insight: `Under ${up} the seller contracts carriage to the named place of destination and can obtain its emission data, while the risk already passes to the buyer at handover to the first carrier. The buyer needs the seller's carrier data to report its inbound transport.`
+        insight: `Under ${up} the seller contracts carriage to the named place of destination and is best placed to request its emission data, while the risk already passes to the buyer at handover to the first carrier. The buyer needs the seller's carrier data to report its inbound transport.`
       };
     case 'DAP':
       return {
@@ -424,7 +424,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Import customs clearance and tariff duties',
           'Any on-carriage after the named place'
         ],
-        insight: 'Under DAP the seller contracts the journey to the named place of destination and holds almost all primary transport data. The buyer depends on the seller for the data on its inbound transport.'
+        insight: 'Under DAP the seller contracts the journey to the named place of destination and is best placed to request carrier data for almost the whole journey. The buyer depends on the seller for the data on its inbound transport.'
       };
     case 'DPU':
       return {
@@ -437,7 +437,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Import customs clearance and tariff duties',
           'Any on-carriage after unloading'
         ],
-        insight: 'Under DPU the seller contracts the journey and the unloading at the named place of destination and holds the primary transport data. The buyer depends on the seller for the data on its inbound transport.'
+        insight: 'Under DPU the seller contracts the journey and the unloading at the named place of destination and is best placed to request the carriers\' data. The buyer depends on the seller for the data on its inbound transport.'
       };
     case 'DDP':
     default:
@@ -452,7 +452,7 @@ export const getResponsibilityBreakdown = (incoterm: string): ResponsibilityData
           'Unloading at the named place of destination',
           'Any internal distribution after delivery'
         ],
-        insight: 'Under DDP the seller contracts the whole journey including import clearance and holds all primary transport data. The buyer depends entirely on the seller for the data on its inbound transport.'
+        insight: 'Under DDP the seller contracts the whole journey including import clearance and is best placed to request carrier data for all legs. The buyer depends entirely on the seller for the data on its inbound transport.'
       };
   }
 };
@@ -764,7 +764,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                   EXPLORE <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-sky-400 to-blue-500 font-black tracking-widest drop-shadow-[0_2px_15px_rgba(34,211,238,0.45)] animate-pulse px-2.5">ANALYTICS</span> CONTEXT
                 </h2>
                 <p className="text-slate-600 font-semibold text-xs md:text-sm leading-relaxed max-w-2xl mx-auto">
-                  Select a view to explore Incoterms® obligations, see which party can access transport emission data for Scope 3 requests, and check typical documents under UCP 600 and ISBP 821.
+                  Select a view to explore Incoterms® obligations, see which party is best placed to request transport emission data for Scope 3 reporting, and check typical documents under UCP 600 and ISBP 821.
                 </p>
               </div>
 
@@ -847,7 +847,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                     icon: Leaf, 
                     color: 'text-emerald-400 group-hover:text-emerald-300', 
                     glow: 'hover:shadow-[0_20px_50px_rgba(16,185,129,0.25)]',
-                    desc: 'Which party can access transport emission data under the selected rule, mapped to GHG Protocol Scope 3 categories (indicative).',
+                    desc: 'Which party is best placed to request transport emission data under the selected rule, mapped to GHG Protocol Scope 3 categories (indicative).',
                     tag: 'GHG & CSRD PROTOCOLS',
                     accentColor: 'from-emerald-500/10 to-transparent',
                     headerCol1: 'GHG & CSRD',
@@ -1708,7 +1708,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
 
                           <div className="pt-4 border-t border-slate-100 space-y-3 flex-1">
                             <h4 className="text-xs font-black text-emerald-900 uppercase tracking-widest">
-                              Seller typically has access to:
+                              Seller is typically best placed to request data for:
                             </h4>
                             <ul className="space-y-2.5">
                               {breakdown.seller.map((item, id) => (
@@ -1754,7 +1754,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
 
                           <div className="pt-4 border-t border-slate-100 space-y-3 flex-1">
                             <h4 className="text-xs font-black text-orange-950 uppercase tracking-widest">
-                              Buyer typically has access to:
+                              Buyer is typically best placed to request data for:
                             </h4>
                             <ul className="space-y-2.5">
                               {breakdown.buyer.map((item, id) => (
@@ -1831,7 +1831,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                               <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Transport Contracting</p>
                               <div className="text-sm font-extrabold text-slate-900 mb-2">{roadmap.contracting}</div>
                               <p className="text-[10px] text-slate-600 leading-tight">
-                                The party that contracts a carrier is the one able to obtain primary emission data for that leg.
+                                The party that contracts a carrier is best placed to request primary emission data for that leg. Whether the data is provided depends on the carrier and the contract.
                               </p>
                             </div>
                             <div className="mt-5 pt-3 border-t border-slate-50 text-[10px] font-bold">

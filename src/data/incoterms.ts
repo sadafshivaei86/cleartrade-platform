@@ -13,7 +13,7 @@ export interface IncotermInfo {
   mode: 'All Modes' | 'Sea / Inland Waterway';
   transferPoint: string;
   transferPosition: number; // 0-100 on the risk bar
-  sellerCarbonControl: number; // indicative share of the journey for which the seller can access transport data (0-100)
+  sellerCarbonControl: number; // indicative share of the journey for which the seller contracts the transport and is best placed to request its data (0-100)
   buyerCarbonControl: number;
   scope3Allocation: {
     label: string;
@@ -80,7 +80,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 70, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller arranges pre-carriage to the quay; the Buyer contracts the vessel and holds the data for loading and the sea voyage.' },
+      { type: 'info', text: 'The Seller arranges pre-carriage to the quay; the Buyer contracts the vessel and is the party to ask for data on loading and the sea voyage.' },
       { type: 'warning', text: 'Loading on board is arranged by the Buyer, so the Seller has no data on terminal loading or the voyage.' },
       { type: 'danger', text: 'For containers handed over at a terminal, FAS does not fit; FCA describes the real handover and the data split more accurately.' },
       { type: 'tip', text: 'Agree in the contract that the Buyer shares the carrier\'s emission statement for the voyage.' }
@@ -126,7 +126,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 60, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller arranges pre-carriage and loading on board; the Buyer contracts the vessel and holds the voyage data.' },
+      { type: 'info', text: 'The Seller arranges pre-carriage and loading on board; the Buyer contracts the vessel and is the party to ask for the voyage data.' },
       { type: 'warning', text: 'The Seller depends on the Buyer for sea-voyage data (Seller\'s Scope 3 Category 9).' },
       { type: 'danger', text: 'For containerised cargo handed to a terminal before loading, FOB does not match the real handover; FCA is the suitable rule.' },
       { type: 'tip', text: 'Agree in the contract that the Buyer shares the carrier\'s emission statement for the voyage.' }
@@ -172,8 +172,8 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 20, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts and pays the sea carriage to the named port and can obtain carrier emission data for the main leg (Seller\'s Scope 3 Category 4).' },
-      { type: 'info', text: 'The Seller\'s insurance obligation under CIF does not change who holds the transport data.' },
+      { type: 'info', text: 'The Seller contracts and pays the sea carriage to the named port and is best placed to request the carrier\'s emission data for the main leg (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller\'s insurance obligation under CIF does not change who contracts the transport.' },
       { type: 'danger', text: 'The Buyer has no contract with the carrier and depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Agree in the contract that the Seller passes the carrier\'s emission data for the voyage to the Buyer.' }
     ],
@@ -218,7 +218,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 20, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts and pays the sea carriage to the named port and can obtain carrier emission data for the main leg (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller contracts and pays the sea carriage to the named port and is best placed to request the carrier\'s emission data for the main leg (Seller\'s Scope 3 Category 4).' },
       { type: 'warning', text: 'Risk passes to the Buyer on board at the port of shipment, although the Seller chooses the carrier and the route.' },
       { type: 'danger', text: 'The Buyer has no contract with the carrier and depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Agree in the contract that the Seller passes the carrier\'s emission data for the voyage to the Buyer.' }
@@ -264,9 +264,9 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 95, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Buyer contracts all transport from the Seller\'s premises and therefore holds the primary emission data for the whole journey.' },
+      { type: 'info', text: 'The Buyer contracts all transport from the Seller\'s premises and is therefore the party to ask for emission data for the whole journey.' },
       { type: 'warning', text: 'The Seller has no contract with any carrier and must ask the Buyer for transport data if a customer requests value-chain emissions.' },
-      { type: 'danger', text: 'Largest data gap for the Seller: under the GHG Protocol this transport is the Seller\'s Scope 3 Category 9, but the Seller cannot measure it.' },
+      { type: 'danger', text: 'Largest data gap for the Seller: under the GHG Protocol this transport is the Seller\'s Scope 3 Category 9, but the Seller has no carrier of its own to ask for the data.' },
       { type: 'tip', text: 'Sellers who expect data requests can consider FCA, where they control loading, export clearance and any pre-carriage to the named place.' }
     ],
     insights: [
@@ -310,7 +310,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 80, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller controls the leg up to the named place of delivery; the Buyer contracts the main carriage and holds its emission data.' },
+      { type: 'info', text: 'The Seller controls the leg up to the named place of delivery; the Buyer contracts the main carriage and is the party to ask for its emission data.' },
       { type: 'tip', text: 'Name the place of delivery precisely: it is also the point where data responsibility passes from one party\'s carrier to the other\'s.' },
       { type: 'warning', text: 'The Seller needs the Buyer\'s carrier data to report the main carriage (Seller\'s Scope 3 Category 9).' },
       { type: 'info', text: 'If the named place is the Seller\'s premises, pre-carriage is also arranged by the Buyer and the Seller\'s data access is close to that under EXW.' }
@@ -356,8 +356,8 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 15, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts and pays carriage to the named place of destination and can obtain carrier data for these legs (Seller\'s Scope 3 Category 4).' },
-      { type: 'info', text: 'The Seller\'s insurance obligation under CIP does not change who holds the transport data.' },
+      { type: 'info', text: 'The Seller contracts and pays carriage to the named place of destination and is best placed to request carrier data for these legs (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller\'s insurance obligation under CIP does not change who contracts the transport.' },
       { type: 'danger', text: 'The Buyer depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Where several carriers are used, ask the Seller for data per leg rather than a single average figure.' }
     ],
@@ -402,7 +402,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 15, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts and pays carriage to the named place of destination and can obtain carrier data for these legs (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller contracts and pays carriage to the named place of destination and is best placed to request carrier data for these legs (Seller\'s Scope 3 Category 4).' },
       { type: 'warning', text: 'Risk passes to the Buyer when the goods are handed to the first carrier, although the Seller selects the carriers and routes.' },
       { type: 'danger', text: 'The Buyer depends on the Seller for main-carriage data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Where several carriers are used, ask the Seller for data per leg rather than a single average figure.' }
@@ -448,7 +448,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 5, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts transport to the named place of destination, including unloading there, and holds the primary data (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller contracts transport to the named place of destination, including unloading there, and is best placed to request the carriers\' data (Seller\'s Scope 3 Category 4).' },
       { type: 'warning', text: 'Import clearance and any on-carriage after unloading are arranged by the Buyer.' },
       { type: 'danger', text: 'The Buyer has no carrier contract for the main journey and depends on the Seller for its inbound transport data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Agree a data-sharing clause so that the Buyer receives the Seller\'s carrier data with the delivery documents.' }
@@ -494,7 +494,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 10, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts transport to the named place of destination and holds primary data for almost the whole journey (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller contracts transport to the named place of destination and is best placed to request carrier data for almost the whole journey (Seller\'s Scope 3 Category 4).' },
       { type: 'warning', text: 'Unloading and any on-carriage after the named place are arranged by the Buyer.' },
       { type: 'danger', text: 'The Buyer has no carrier contract for the main journey and depends on the Seller for its inbound transport data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Agree a data-sharing clause so that the Buyer receives the Seller\'s carrier data with the delivery documents.' }
@@ -540,7 +540,7 @@ export const INCOTERMS: Record<string, IncotermInfo> = {
       { label: 'Buyer-contracted transport', percentage: 2, color: 'bg-orange-500' }
     ],
     sustainabilityInsights: [
-      { type: 'info', text: 'The Seller contracts the whole journey, including import clearance, and holds all primary transport data (Seller\'s Scope 3 Category 4).' },
+      { type: 'info', text: 'The Seller contracts the whole journey, including import clearance, and is best placed to request carrier data for all legs (Seller\'s Scope 3 Category 4).' },
       { type: 'warning', text: 'Only unloading at the named place of destination is arranged by the Buyer.' },
       { type: 'danger', text: 'The Buyer depends entirely on the Seller for inbound transport data (Buyer\'s Scope 3 Category 4).' },
       { type: 'tip', text: 'Buyers that receive data requests from their own customers should agree data sharing with the Seller before choosing DDP.' }

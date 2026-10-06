@@ -1,11 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  FileText, Upload, Sparkles, RefreshCcw, CheckCircle2, 
-  XCircle, AlertTriangle, ShieldCheck, Leaf, Globe, 
-  Coins, Download, ArrowRight, CornerDownRight, FileEdit, HelpCircle,
-  Ship, Truck, Warehouse, AlertCircle, Calendar
+import {
+  FileText, Upload, RefreshCcw, CheckCircle2, AlertTriangle,
+  ShieldCheck, Globe, FileEdit, Info, ListChecks
 } from 'lucide-react';
+import { INCOTERMS } from '../data/incoterms';
+import { LEGAL_DATA } from '../data/legalFramework';
+
+// Review Contract (v1.3): rule-based screening of pasted contract text.
+// The sample contracts below are fictitious and are screened by the same
+// checks as any other text; no prepared findings are attached to them.
 
 interface TemplateContract {
   title: string;
@@ -16,8 +20,8 @@ interface TemplateContract {
 
 const TEMPLATE_CONTRACTS: TemplateContract[] = [
   {
-    title: "Draft A: CIF Hamburg Mismatched Cost/Risk Transfer",
-    description: "Contains severe risk mismatch in CIF shipping and delayed insurance handover.",
+    title: "Sample A: CIF Hamburg with a conflicting risk clause",
+    description: "Fictitious text whose risk clause and insurance-document clause conflict with CIF.",
     incoterm: "CIF",
     text: `SALES AND PURCHASE CONTRACT - REF No: SC-2026-F08
 BUYER: Hamburg Trade Logistics GmbH, Germany
@@ -38,8 +42,8 @@ ARTICLE 4: SUSTAINABILITY & CO2 ALLOCATION
 No specific carbon reporting or Scope 3 emissions allocation is defined for the transit leg. Seller is not responsible for first-mile truck route optimization.`
   },
   {
-    title: "Draft B: EXW Shenzhen Underdeveloped Sustainability",
-    description: "Features EXW terms where sustainability reporting is heavily misplaced.",
+    title: "Sample B: EXW Shenzhen with duties the seller cannot meet",
+    description: "Fictitious text that asks an EXW seller for an on-board bill of lading and a transport guarantee.",
     incoterm: "EXW",
     text: `GLOBAL PROCUREMENT AGREEMENT - REG # GPA-993
 PARTIES: EuroTech Distribution NV (Buyer) and Shenzhen Solar-Silica Factories Ltd (Seller)
@@ -56,8 +60,8 @@ ARTICLE 3: LETTERS OF CREDIT (UCP 600)
 Bank payments require a Clean On-Board Bill of Lading. Notice: Since the shipment is Ex Works, the Seller is not a party to the contract of carriage and cannot secure the Bill of Lading directly from the carrier.`
   },
   {
-    title: "Draft C: Comprehensive Compliant FCA Tokyo Model",
-    description: "Highly aligned with modern green packaging and proper UCP 600 standards.",
+    title: "Sample C: FCA Tokyo, consistent example",
+    description: "Fictitious text with an agreed on-board notation and an emission-data clause.",
     incoterm: "FCA",
     text: `INTERNATIONAL BUSINESS COOPERATION AGREEMENT
 BUYER: Global Green Energies AG, Zurich, Switzerland
@@ -70,229 +74,361 @@ ARTICLE 2: INCOTERMS® 2020 DELIVERY ALIGNMENT
 The transit is scheduled on "FCA Tokyo Container Yard, Japan (Incoterms® 2020)".
 Risk transfers to the Buyer once the carrier handovers the goods at Tokyo Yard. Export customs clearance is fully handled by the Seller.
 
-ARTICLE 3: ELECTRONIC PAYMENTS AND DOCUMENTARY COMPLIANCE
-Under UCP 600 Article 22, the Seller shall present a carrier-issued receipt with an On-Board notation. Risk of document rejection is minimized by placing correct Incoterms FCA specifications on invoice.
+ARTICLE 3: PAYMENT AND DOCUMENTARY COMPLIANCE
+Payment is made by irrevocable letter of credit subject to UCP 600. The Buyer shall instruct the carrier to issue a transport document with an on-board notation to the Seller, who presents it under the credit (Incoterms® 2020, FCA A6/B6).
 
 ARTICLE 4: DECARBONIZATION COMPLIANCE
 Seller executes dynamic route tracking for the initial domestic transport to Tokyo Yard, providing Scope 3 carbon logs to the Buyer within 48 hours.`
   }
 ];
 
+
+// ---------------------------------------------------------------------------
+// Rule-based screening. No language model is used. The checks below look for
+// keywords and simple patterns in the pasted text and compare them with the
+// rule data that the rest of ClearTrade uses (INCOTERMS, LEGAL_DATA).
+// ---------------------------------------------------------------------------
+
+type CheckStatus = 'ok' | 'review' | 'info';
+
+interface CheckResult {
+  id: string;
+  title: string;
+  status: CheckStatus;
+  finding: string;
+  evidence?: string;
+  basis?: string;
+}
+
+interface ScreeningResult {
+  code: string | null;
+  codesFound: string[];
+  ruleName: string;
+  checks: CheckResult[];
+  reviewCount: number;
+  rawLength: number;
+  timestamp: string;
+}
+
+const RULE_NAMES: Record<string, RegExp> = {
+  EXW: /\bex\s+works\b/i,
+  FCA: /\bfree\s+carrier\b/i,
+  FAS: /\bfree\s+alongside\s+ship\b/i,
+  FOB: /\bfree\s+on\s+board\b/i,
+  CFR: /\bcost\s+and\s+freight\b/i,
+  CIF: /\bcost,?\s+insurance\s+and\s+freight\b/i,
+  CPT: /\bcarriage\s+paid\s+to\b/i,
+  CIP: /\bcarriage\s+and\s+insurance\s+paid\b/i,
+  DPU: /\bdelivered\s+at\s+place\s+unloaded\b/i,
+  DAP: /\bdelivered\s+at\s+place\b(?!\s+unloaded)/i,
+  DDP: /\bdelivered\s+duty\s+paid\b/i
+};
+
+const EARLY_DELIVERY_RULES = ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP'];
+
+const DOC_KEYWORDS: { test: RegExp; find: RegExp }[] = [
+  { test: /invoice/i, find: /invoice/i },
+  { test: /packing/i, find: /packing\s+list/i },
+  { test: /bill of lading/i, find: /bill\s+of\s+lading|\bB\/L\b/i },
+  { test: /waybill/i, find: /waybill/i },
+  { test: /insurance/i, find: /insur/i },
+  { test: /export/i, find: /export\s+(licen[cs]e|clearance|customs|declaration)/i },
+  { test: /freight/i, find: /freight\s+(pre)?paid/i },
+  { test: /transport document|receipt|delivery/i, find: /transport\s+document|receipt|bill\s+of\s+lading|waybill|CMR/i }
+];
+
+// Returns the sentence (or line) around a match, shortened for display.
+const snippetAround = (text: string, re: RegExp): string | undefined => {
+  const m = re.exec(text);
+  if (!m) return undefined;
+  const start = Math.max(text.lastIndexOf('\n', m.index), text.lastIndexOf('. ', m.index)) + 1;
+  let end = text.length;
+  const nextBreaks = [text.indexOf('\n', m.index + m[0].length), text.indexOf('. ', m.index + m[0].length)].filter(i => i !== -1);
+  if (nextBreaks.length) end = Math.min(...nextBreaks) + 1;
+  const s = text.slice(start, end).replace(/\s+/g, ' ').trim();
+  return s.length > 260 ? s.slice(0, 257) + '…' : s;
+};
+
+const detectRules = (text: string): string[] => {
+  const found: { code: string; pos: number }[] = [];
+  Object.keys(INCOTERMS).forEach(code => {
+    const byCode = new RegExp(`\\b${code}\\b`).exec(text);
+    const byName = RULE_NAMES[code] ? RULE_NAMES[code].exec(text) : null;
+    const positions = [byCode?.index, byName?.index].filter((p): p is number => typeof p === 'number');
+    if (positions.length) found.push({ code, pos: Math.min(...positions) });
+  });
+  return found.sort((a, b) => a.pos - b.pos).map(f => f.code);
+};
+
+const runScreening = (text: string): ScreeningResult => {
+  const checks: CheckResult[] = [];
+  const codes = detectRules(text);
+  const code = codes[0] || null;
+  const info = code ? INCOTERMS[code] : null;
+  const legal = code ? LEGAL_DATA[code] : null;
+
+  // 1. Incoterms rule
+  if (!code || !info) {
+    checks.push({
+      id: 'rule', title: 'Incoterms® rule stated', status: 'review',
+      finding: 'No Incoterms® rule was found in the text (three-letter code in capitals or full name). State the rule, the named place or port and the edition, for example “FCA Helsinki, Incoterms® 2020”. The rule-specific checks below could not be run.'
+    });
+  } else if (codes.length > 1) {
+    checks.push({
+      id: 'rule', title: 'Incoterms® rule stated', status: 'review',
+      finding: `More than one rule appears in the text: ${codes.join(', ')}. The checks below use the first one (${code}). A contract should state a single rule for the delivery, or make clear which rule applies to which shipment.`,
+      evidence: snippetAround(text, new RegExp(`\\b${code}\\b`)) || snippetAround(text, RULE_NAMES[code])
+    });
+  } else {
+    checks.push({
+      id: 'rule', title: 'Incoterms® rule stated', status: 'ok',
+      finding: `The text states ${code} (${info.name}).`,
+      evidence: snippetAround(text, new RegExp(`\\b${code}\\b`)) || snippetAround(text, RULE_NAMES[code])
+    });
+  }
+
+  // 2. Edition
+  const otherEdition = /incoterms\s*®?\s*\(?\s*(2010|2000|1990)/i.exec(text);
+  if (/incoterms\s*®?\s*\(?\s*2020/i.test(text)) {
+    checks.push({ id: 'edition', title: 'Edition stated', status: 'ok', finding: 'The text refers to Incoterms® 2020, the edition on which ClearTrade is based.' });
+  } else if (otherEdition) {
+    checks.push({ id: 'edition', title: 'Edition stated', status: 'review', finding: `The text refers to Incoterms® ${otherEdition[1]}. ClearTrade uses the 2020 rules, so the checks below may not fit the edition named in the contract.`, evidence: snippetAround(text, /incoterms\s*®?\s*\(?\s*(2010|2000|1990)/i) });
+  } else {
+    checks.push({ id: 'edition', title: 'Edition stated', status: 'review', finding: 'No edition was found. Add “Incoterms® 2020” after the rule and the named place so that it is clear which version of the rules applies.' });
+  }
+
+  if (code && info && legal) {
+    // 3. Named place
+    const placeRe = new RegExp(`\\b${code}\\b\\s*(?:\\([^)]{0,40}\\)\\s*)?([A-Z][\\w.'’-]+(?:[ ,]+[A-Z][\\w.'’-]+){0,4})`);
+    const place = placeRe.exec(text);
+    const placeText = place ? place[1].replace(/[ ,]*\bIncoterms\b.*$/, '').replace(/[ ,]+$/, '') : '';
+    if (place && placeText && !/^(Incoterms|Term|Terms|Rule|Delivery|Shipment|The|And|Or)\b/.test(placeText)) {
+      checks.push({
+        id: 'place', title: 'Named place or port', status: 'info',
+        finding: `Text after the rule: “${placeText}”. Check that this is the exact place or port intended. Under ${code} the named place is: ${info.description}.`,
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020)`
+      });
+    } else {
+      checks.push({
+        id: 'place', title: 'Named place or port', status: 'review',
+        finding: `No place or port name was recognised directly after ${code}. An Incoterms® rule is complete only with a named place or port (${info.description}).`,
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020)`
+      });
+    }
+
+    // 4. Transport mode
+    const modeRe = /(containeri[sz]ed|container|air\s?freight|air\s+waybill|by\s+air|multimodal)/i;
+    if (legal.isSeaOnly) {
+      const hit = modeRe.exec(text);
+      if (hit) {
+        checks.push({
+          id: 'mode', title: 'Rule and mode of transport', status: 'review',
+          finding: `${code} is intended for sea and inland waterway transport, and the text mentions “${hit[0]}”. ${legal.seaAdvisory || ''}`.trim(),
+          evidence: snippetAround(text, modeRe),
+          basis: `ClearTrade rule data for ${code} (Incoterms® 2020)`
+        });
+      } else {
+        checks.push({ id: 'mode', title: 'Rule and mode of transport', status: 'info', finding: `${code} is intended for sea and inland waterway transport only. No wording pointing to another mode or to a container handover before loading was found.`, basis: `ClearTrade rule data for ${code} (Incoterms® 2020)` });
+      }
+    } else {
+      checks.push({ id: 'mode', title: 'Rule and mode of transport', status: 'ok', finding: `${code} can be used for any mode of transport.`, basis: `ClearTrade rule data for ${code} (Incoterms® 2020)` });
+    }
+
+    // 5. Risk-transfer wording
+    const early = EARLY_DELIVERY_RULES.includes(code);
+    const lateRisk1 = /(risk|liab\w+)[^.\n]{0,120}\b(until|upon|after|not\s+before)\b[^.\n]{0,80}\b(arriv\w*|destination|discharg\w*|unload\w*|anchor|buyer['’]s\s+(premises|warehouse))/i;
+    const lateRisk2 = /seller[^.\n]{0,60}\b(remain\w*|shall\s+be|stays?)\b[^.\n]{0,20}\b(liable|responsible)\b[^.\n]{0,80}\b(during|until|throughout)\b[^.\n]{0,60}\b(voyage|journey|transit|carriage|transport|arriv\w*|destination)/i;
+    const earlyRisk = /risk[^.\n]{0,100}\b(pass\w*|transfer\w*)\b[^.\n]{0,80}\b(on\s+board|port\s+of\s+(shipment|loading)|handed\s+(over\s+)?to\s+the\s+(first\s+)?carrier|seller['’]s\s+premises)/i;
+    const conflictRe = early ? (lateRisk1.test(text) ? lateRisk1 : lateRisk2.test(text) ? lateRisk2 : null) : (earlyRisk.test(text) ? earlyRisk : null);
+    if (conflictRe) {
+      checks.push({
+        id: 'risk', title: 'Risk-transfer wording', status: 'review',
+        finding: `The text appears to place the transfer of risk at a different point from the one set by ${code}. Under ${code} the risk passes: ${info.transferPoint}. A clause that moves this point contradicts the rule; choose a rule that matches the intention or remove the clause.`,
+        evidence: snippetAround(text, conflictRe),
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A2/A3)`
+      });
+    } else {
+      checks.push({
+        id: 'risk', title: 'Risk-transfer wording', status: 'info',
+        finding: `Under ${code} the risk passes: ${info.transferPoint}. No wording that moves this point was found by keyword. This is not a confirmation that the clauses are consistent.`,
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A2/A3)`
+      });
+    }
+
+    // 6. Insurance
+    const sellerMustInsure = info.responsibilities.insurance === 'Seller';
+    if (sellerMustInsure) {
+      if (/insur/i.test(text)) {
+        checks.push({ id: 'insurance', title: 'Insurance', status: 'ok', finding: `${code} obliges the seller to insure the goods; minimum cover in the rule data: ${info.detailedAnalysis.insurance.minimumCoverage}. An insurance clause was found; check that the agreed cover is sufficient for the buyer.`, evidence: snippetAround(text, /insur/i), basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A5)` });
+      } else {
+        checks.push({ id: 'insurance', title: 'Insurance', status: 'review', finding: `${code} obliges the seller to insure the goods (minimum cover in the rule data: ${info.detailedAnalysis.insurance.minimumCoverage}), but no insurance wording was found in the text.`, basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A5)` });
+      }
+    } else {
+      const sellerInsRe = /seller[^.\n]{0,80}\b(shall|must|will|agrees\s+to|is\s+to)\b[^.\n]{0,40}\b(insur\w+)/i;
+      if (sellerInsRe.test(text)) {
+        checks.push({ id: 'insurance', title: 'Insurance', status: 'review', finding: `${code} does not oblige the seller to insure the goods. The text appears to add such an obligation; make sure this is intended and state the required cover.`, evidence: snippetAround(text, sellerInsRe), basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A5)` });
+      } else {
+        checks.push({ id: 'insurance', title: 'Insurance', status: 'info', finding: `${code} does not oblige the seller to insure the goods, and no such obligation was found in the text. The party bearing the risk during carriage should consider its own cover.`, basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A5)` });
+      }
+    }
+
+    // 7. Letter of credit and documents
+    const lcRe = /(letter\s+of\s+credit|letters\s+of\s+credit|documentary\s+credit|\bL\/C\b|\bUCP\b)/i;
+    if (!lcRe.test(text)) {
+      checks.push({
+        id: 'lc', title: 'Letter of credit and documents', status: 'info',
+        finding: `No letter of credit is mentioned, so documentary points under UCP 600 were not checked. Typical seller documents under ${code}: ${legal.sellerDocs.map(d => d.name).join('; ')}.`,
+        basis: `ClearTrade document data for ${code}`
+      });
+    } else {
+      if (/UCP\s*600/i.test(text)) {
+        checks.push({ id: 'ucp', title: 'Credit subject to UCP 600', status: 'ok', finding: 'The text refers to UCP 600.', evidence: snippetAround(text, /UCP\s*600/i) });
+      } else {
+        checks.push({ id: 'ucp', title: 'Credit subject to UCP 600', status: 'review', finding: 'A letter of credit is mentioned, but UCP 600 is not. UCP 600 applies only if the credit expressly says so.', evidence: snippetAround(text, lcRe) });
+      }
+
+      const mentioned: string[] = [];
+      const notMentioned: string[] = [];
+      legal.sellerDocs.forEach(doc => {
+        const kw = DOC_KEYWORDS.find(k => k.test.test(doc.name));
+        const isThere = kw ? kw.find.test(text) : false;
+        (isThere ? mentioned : notMentioned).push(doc.name);
+      });
+      checks.push({
+        id: 'docs', title: 'Typical seller documents', status: 'info',
+        finding: `Typical seller documents under ${code} that the text mentions: ${mentioned.length ? mentioned.join('; ') : 'none'}. Not mentioned: ${notMentioned.length ? notMentioned.join('; ') : 'none'}. A document that is not mentioned is not necessarily missing: some are needed only if the contract or the credit calls for them.`,
+        basis: `ClearTrade document data for ${code}`
+      });
+
+      const onBoardRe = /on[-\s]board/i;
+      if ((code === 'EXW' || code === 'FCA') && onBoardRe.test(text)) {
+        if (code === 'FCA' && /instruct\w*[^.\n]{0,80}carrier/i.test(text)) {
+          checks.push({ id: 'onboard', title: 'On-board transport document', status: 'ok', finding: 'The text asks for an on-board notation under FCA and provides that the buyer instructs the carrier to issue the document to the seller, which is the mechanism foreseen in Incoterms® 2020 (FCA A6/B6).', evidence: snippetAround(text, onBoardRe), basis: 'Incoterms® 2020, FCA A6/B6' });
+        } else if (code === 'FCA') {
+          checks.push({ id: 'onboard', title: 'On-board transport document', status: 'review', finding: 'The text asks for an on-board document, but under FCA the buyer contracts the carriage. The seller can present such a document only if the parties agree that the buyer instructs the carrier to issue it to the seller (Incoterms® 2020, FCA A6/B6). No such agreement was found in the text.', evidence: snippetAround(text, onBoardRe), basis: 'Incoterms® 2020, FCA A6/B6' });
+        } else {
+          checks.push({ id: 'onboard', title: 'On-board transport document', status: 'review', finding: 'The text asks for an on-board document, but under EXW the seller does not contract the carriage and has no obligation to provide a transport document. A credit that requires it may be impossible for the seller to satisfy; FCA with an agreed on-board notation, or another rule, may fit better.', evidence: snippetAround(text, onBoardRe), basis: `ClearTrade rule data for ${code} (Incoterms® 2020)` });
+        }
+      }
+
+      const lateInsRe = /insurance\s+(document|certificate|policy)[^.\n]{0,100}\b(after|later\s+than)\b[^.\n]{0,60}\b(arrival|shipment|loading|sailing)/i;
+      if (lateInsRe.test(text)) {
+        checks.push({ id: 'insdoc', title: 'Date of the insurance document', status: 'review', finding: 'The text allows the insurance document to be supplied after shipment or arrival. Under a letter of credit the insurance document is examined under UCP 600 Art. 28, and a document dated after the date of shipment is normally refused unless it shows that cover was effective from that date.', evidence: snippetAround(text, lateInsRe), basis: 'UCP 600, Art. 28' });
+      }
+    }
+
+    // 8. Transport-emission data
+    const contracting = info.detailedAnalysis.transport.contracting;
+    const other = contracting === 'Seller' ? 'Buyer' : 'Seller';
+    const emissionRe = /(emission|carbon|\bco2\b|co₂|scope\s*3|\bghg\b|greenhouse)/i;
+    const misplacedRe = new RegExp(`${other}[^.\\n]{0,60}\\b(guarantee\\w*|ensure\\w*|is\\s+responsible\\s+for|shall\\s+be\\s+responsible)\\b[^.\\n]{0,160}(emission|carbon|scope\\s*3|sustainab)`, 'i');
+    if (misplacedRe.test(text)) {
+      checks.push({
+        id: 'emissions', title: 'Transport-emission data clause', status: 'review',
+        finding: `The text places a transport-related sustainability or emissions duty on the ${other.toLowerCase()}, although under ${code} the ${contracting.toLowerCase()} contracts the main carriage. The ${other.toLowerCase()} can meet such a duty only with data passed on by the ${contracting.toLowerCase()}.`,
+        evidence: snippetAround(text, misplacedRe),
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A4/B4)`
+      });
+    } else if (emissionRe.test(text)) {
+      checks.push({
+        id: 'emissions', title: 'Transport-emission data clause', status: 'info',
+        finding: `A clause on emissions or carbon data was found. Under ${code} the ${contracting.toLowerCase()} contracts the main carriage and is best placed to request the carrier's emission data; check that the clause puts each duty on the party able to fulfil it.`,
+        evidence: snippetAround(text, emissionRe),
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A4/B4)`
+      });
+    } else {
+      checks.push({
+        id: 'emissions', title: 'Transport-emission data clause', status: 'review',
+        finding: `No clause on transport-emission data was found. Under ${code} the ${contracting.toLowerCase()} contracts the main carriage. If the ${other.toLowerCase()} expects data requests from its customers, agree in the contract that the carrier's emission data is passed on.`,
+        basis: `ClearTrade rule data for ${code} (Incoterms® 2020, A4/B4)`
+      });
+    }
+  }
+
+  return {
+    code,
+    codesFound: codes,
+    ruleName: info ? `${code} – ${info.name}` : 'No rule identified',
+    checks,
+    reviewCount: checks.filter(c => c.status === 'review').length,
+    rawLength: text.length,
+    timestamp: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  };
+};
+
+const STATUS_STYLE: Record<CheckStatus, { card: string; badge: string; label: string }> = {
+  ok: { card: 'bg-emerald-50/40 border-emerald-100', badge: 'bg-emerald-100 text-emerald-800', label: 'No issue found' },
+  review: { card: 'bg-amber-50/50 border-amber-200', badge: 'bg-amber-100 text-amber-900', label: 'Review' },
+  info: { card: 'bg-slate-50 border-slate-200', badge: 'bg-slate-200 text-slate-700', label: 'Information' }
+};
+
 export default function ContractCompliance() {
   const [contractText, setContractText] = useState<string>('');
-  const [isAuditing, setIsAuditing] = useState<boolean>(false);
-  const [activeAuditTab, setActiveAuditTab] = useState<'overview' | 'incoterms' | 'sustainability' | 'compliance'>('overview');
-  const [auditStepMessage, setAuditStepMessage] = useState<string>('');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
   const [isWritingManually, setIsWritingManually] = useState<boolean>(false);
-  
+  const [result, setResult] = useState<ScreeningResult | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Structured result state
-  const [auditResult, setAuditResult] = useState<any | null>(null);
-
-  const handleApplyTemplate = (template: TemplateContract) => {
-    setContractText(template.text);
-    setIsWritingManually(true);
-    showNotice(`Loaded template: ${template.title.split(':')[0]}`, 'success');
-  };
 
   const showNotice = (message: string, type: 'success' | 'info' | 'error') => {
     setNotification({ message, type });
     setTimeout(() => {
-      setNotification((prev) => prev?.message === message ? null : prev);
-    }, 4000);
+      setNotification((prev) => (prev?.message === message ? null : prev));
+    }, 6000);
+  };
+
+  const handleApplyTemplate = (template: TemplateContract) => {
+    setContractText(template.text);
+    setIsWritingManually(true);
+    showNotice(`Loaded ${template.title.split(':')[0]} (fictitious sample text)`, 'success');
+  };
+
+  const processSelectedFile = (file: File) => {
+    if (file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain') {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (typeof event.target?.result === 'string') {
+          setContractText(event.target.result.slice(0, 100000));
+          setIsWritingManually(true);
+          showNotice(`Loaded text from ${file.name}`, 'success');
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      showNotice('This prototype reads plain-text (.txt) files only. Please copy the text from your PDF or Word file and paste it into the box.', 'error');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) processSelectedFile(files[0]);
+    e.target.value = '';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const processSelectedFile = (file: File) => {
-    if (file.name.endsWith(".txt") || file.type === "text/plain") {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setContractText(event.target.result as string);
-          setIsWritingManually(true);
-          showNotice(`Successfully uploaded: ${file.name}`, 'success');
-        }
-      };
-      reader.readAsText(file);
-    } else if (file.name.endsWith(".pdf") || file.type === "application/pdf" || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
-      // Simulate high-fidelity PDF/Document parsing
-      setIsAuditing(true);
-      setAuditStepMessage(`Running legal OCR & layout parser on "${file.name}"...`);
-      setTimeout(() => {
-        setContractText(`SALES AND PURCHASE CONTRACT (EXTRACTED FROM ${file.name.toUpperCase()})
-BUYER: Hamburg Trade Logistics GmbH, Germany
-SELLER: Oceanic Agri-Products Corp, Buenos Aires, Argentina
-
-ARTICLE 1: SCOPE OF DELIVERY
-The Seller agrees to supply and sell, and the Buyer agrees to purchase 500 Metric Tons of organic agricultural grains.
-
-ARTICLE 2: PRICE AND DELIVERY CONDITIONS (INCOTERMS® 2020)
-The price for all goods shall be USD 1,200 per Metric Ton, delivered on "CIF Hamburg, Germany (Incoterms® 2020)". 
-Special Provision: Delivery of goods and transfer of physical risk shall take place only after the vessel drops anchor at the Port of Hamburg. The Seller shall remain liable for cargo damage during the maritime journey.
-
-ARTICLE 3: PAYMENT & DOCUMENTARY COMPLIANCE
-Payment shall be secured via an Irrevocable Letter of Credit issued in accordance with ICC UCP 600 guidelines. 
-Required documents: Marine Bill of Lading, Commercial Invoice, and standard insurance policy. Note: The seller may supply the insurance document up to three days after the vessel's arrival.
-
-ARTICLE 4: SUSTAINABILITY & CO2 ALLOCATION
-No specific carbon reporting or Scope 3 emissions allocation is defined for the transit leg. Seller is not responsible for first-mile truck route optimization.`);
-        setIsWritingManually(true);
-        setIsAuditing(false);
-        showNotice(`Extracted text from: ${file.name} (Simulated OCR Complete)`, 'success');
-      }, 1800);
-    } else {
-      showNotice("Unsupported format. Please upload a .txt, .pdf, or Word document.", "error");
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      processSelectedFile(files[0]);
-    }
-  };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      processSelectedFile(files[0]);
-    }
+    if (files && files.length > 0) processSelectedFile(files[0]);
   };
 
-  const executeAudit = () => {
+  const executeScreening = () => {
     if (!contractText.trim()) return;
-
-    setIsAuditing(true);
-    setAuditStepMessage('Initializing AI audit engine...');
-
-    const stepMessages = [
-      'Scanning agreement structure & definitions...',
-      'Cross-referencing stated Incoterm alignment with risk transfer clauses...',
-      'Assessing Scope 3 carbon footprint & green logistics optimization...',
-      'Validating letter of credit specifications with UCP 600 & ISBP 821...',
-      'Compiling risk scoring and formulating structural remedies...'
-    ];
-
-    let currentStep = 0;
-    const interval = setInterval(() => {
-      if (currentStep < stepMessages.length) {
-        setAuditStepMessage(stepMessages[currentStep]);
-        currentStep++;
-      } else {
-        clearInterval(interval);
-        generateStructuredReport();
-      }
-    }, 450);
-  };
-
-  const generateStructuredReport = () => {
-    const textLower = contractText.toLowerCase();
-    
-    // Default dynamic report template values based on keyword matching
-    let incotermDetected = "Unknown/Not clear";
-    if (textLower.includes("cif")) incotermDetected = "CIF (Cost, Insurance and Freight)";
-    else if (textLower.includes("exw") || textLower.includes("ex works")) incotermDetected = "EXW (Ex Works)";
-    else if (textLower.includes("fca")) incotermDetected = "FCA (Free Carrier)";
-    else if (textLower.includes("fob")) incotermDetected = "FOB (Free On Board)";
-    else if (textLower.includes("cfr")) incotermDetected = "CFR (Cost and Freight)";
-    else if (textLower.includes("dap")) incotermDetected = "DAP (Delivered at Place)";
-    else if (textLower.includes("ddp")) incotermDetected = "DDP (Delivered Duty Paid)";
-
-    let score = 75; // baseline score
-    let incotermsRiskList: string[] = [];
-    let incotermsCompliantList: string[] = [];
-    
-    let sustainabilityRiskList: string[] = [];
-    let sustainabilityGrade: "A" | "B" | "C" | "D" | "F" = "B";
-    let sustainabilityGradeColor = "text-emerald-600 bg-emerald-50 border-emerald-100";
-    let carbonSavingsFactor = "Calculated based on standard logistics route.";
-
-    let creditComplianceRiskList: string[] = [];
-    let creditComplianceStatus: "Compliant" | "Slight Mismatch" | "Critical Danger" = "Compliant";
-
-    // Detailed tailored rules
-    if (textLower.includes("cif") && textLower.includes("anchor") || textLower.includes("liable for cargo damage")) {
-      score -= 35;
-      incotermsRiskList.push("Critical Risk Transfer Mismatch: According to ICC Incoterms® 2020, risk of cargo loss transfers to the buyer immediately upon loading on board at the port of departure. A custom clause holding the seller liable until vessel anchoring in Hamburg invalidates the CIF concept, creating severe maritime liability issues and effectively reverting to DAP terms.");
-      incotermsRiskList.push("Insurance Mismatch: The seller is contractually required to purchase marine insurance to cover the buyer's cargo risk. Extending the seller’s real physical responsibility until destination undermines established insurance claims routing.");
-      incotermsCompliantList.push("Carriage and Freight: Shipping and transport cost obligations are properly allocated to the seller.");
-      
-      sustainabilityRiskList.push("Missing Carbon Optimization: The maritime routing lacks binding requirements or routing efficiency target clauses.");
-      sustainabilityRiskList.push("First-Mile Trucking Footprint: No commitment is specified for modern clean transportation fleets or low emission routes to origin port.");
-      sustainabilityGrade = "D";
-      sustainabilityGradeColor = "text-rose-600 bg-rose-50 border-rose-100";
-      
-      creditComplianceRiskList.push("Delayed Insurance Document Presentation: Allowing insurance document presentation up to 3 days after arrival violates UCP 600 Article 28. Standard letters of credit mandate that the insurance certificate date must be no later than the ocean Bill of Lading, causing severe risk of bank presentation refusal.");
-      creditComplianceStatus = "Critical Danger";
-    } 
-    else if (textLower.includes("exw") && (textLower.includes("csddd") || textLower.includes("decarbonization") || textLower.includes("european"))) {
-      score -= 25;
-      incotermsRiskList.push("Export Customs Obstruction: Under EXW, the foreign buyer bears full responsibility for local export clearance. If local export procedures are complex and the seller provides no legal export clearance assistance, immediate logistics logjams will result.");
-      incotermsCompliantList.push("Defined Delivery Boundary: The delivery address (Shenzhen Factory Gate) is specified clearly.");
-      
-      sustainabilityRiskList.push("Unrealistic ESG Devolution: The agreement forces the factory-gate seller (EXW) to guarantee European CSDDD compliance, despite the buyer fully selecting and controlling the transport carrier. This creates an unfeasible legal contradiction.");
-      sustainabilityGrade = "C";
-      sustainabilityGradeColor = "text-amber-600 bg-amber-50 border-amber-100";
-      
-      creditComplianceRiskList.push("EXW Bill of Lading Standstill: The bank letter of credit demands a Clean On-Board Bill of Lading. Because EXW positions the seller as non-party to carriage contracts, they cannot acquire the carrier document directly, blocking payments.");
-      creditComplianceStatus = "Slight Mismatch";
-    }
-    else if (textLower.includes("fca") || textLower.includes("compliant")) {
-      score += 20;
-      incotermsCompliantList.push("Precise Risk Transfer: Risk handovers occur seamlessly at Tokyo yard, complying with the multimodal nature of container logistics.");
-      incotermsCompliantList.push("Harmonized Customs: Export customs clearance is correctly assigned to the local seller, preventing export hold-ups.");
-      
-      sustainabilityRiskList.push("Excellent ESG Integration: Utilizing wood-polymer composites for packaging alongside real-time Scope 3 analytics in the initial 48 hours demonstrates superb green logistics maturity.");
-      sustainabilityGrade = "A";
-      sustainabilityGradeColor = "text-emerald-700 bg-emerald-500/10 border-emerald-200";
-      carbonSavingsFactor = "Fewer resource expenditures achieved via wood-polymer composites along with rapid Scope 3 greenhouse emissions telemetry.";
-      
-      creditComplianceStatus = "Compliant";
-      incotermsRiskList.push("Minor Schedule Risk: We recommend specifying a clear threshold for terminal demurrage fees at the Tokyo container yard.");
-    }
-    else {
-      // General dynamic scanner fallback
-      score = 65;
-      incotermsRiskList.push("Ambiguous Costs and Risk Transfer: Precise point of cost and physical liability transition is undefined in delivery clauses.");
-      sustainabilityRiskList.push("The contract lacks modern ESG reporting commitments or carbon emission auditing clauses.");
-      creditComplianceStatus = "Slight Mismatch";
-      creditComplianceRiskList.push("Ensure full compliance by adding a direct reference to the latest ICC ISBP 821 document auditing rules.");
-    }
-
-    setAuditResult({
-      score: Math.min(100, Math.max(0, score)),
-      incoterm: incotermDetected,
-      incotermsRiskList,
-      incotermsCompliantList,
-      sustainabilityGrade,
-      sustainabilityGradeColor,
-      sustainabilityRiskList,
-      carbonSavingsFactor,
-      creditComplianceRiskList,
-      creditComplianceStatus,
-      rawLength: contractText.length,
-      timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    });
-
-    setIsAuditing(false);
-    setActiveAuditTab('overview');
+    setResult(runScreening(contractText));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleReset = () => {
     setContractText('');
-    setAuditResult(null);
+    setResult(null);
     setIsWritingManually(false);
   };
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8" id="contract-auditor-root">
-      {/* Header Container */}
       <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100" id="auditor-header">
         <div className="bg-slate-900 p-8 md:p-10 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -301,32 +437,31 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-2 text-left">
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-widest justify-start">
-                <Sparkles size={16} />
-                Smart Green Supply Chain Utilities
+                <ListChecks size={16} />
+                Rule-based screening · Prototype
               </div>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight" id="auditor-title">
                 Review Contract
               </h1>
-              <p className="text-slate-400 text-sm font-semibold max-w-xl">
-                Automated auditing and compliance validation of international sales contracts against Incoterms® 2020 risk handovers, green logistics (Scope 3), and documentary trade finance guidelines (UCP 600).
+              <p className="text-slate-400 text-sm font-semibold max-w-2xl">
+                Screens pasted contract text for a small set of points on the Incoterms® 2020 rule, risk transfer, insurance, letter-of-credit documents and transport-emission data. It works with keywords and the ClearTrade rule data, does not use AI and is not legal advice.
               </p>
             </div>
-            
-            {auditResult && (
+
+            {result && (
               <button
                 onClick={handleReset}
                 className="flex items-center gap-3 px-6 py-3.5 bg-white/10 hover:bg-white/20 rounded-2xl transition-all text-xs font-bold backdrop-blur-md border border-white/10"
               >
                 <RefreshCcw size={16} />
-                Re-Audit Contract
+                Check Another Text
               </button>
             )}
           </div>
         </div>
 
-        {/* Dynamic Display State */}
         <AnimatePresence mode="wait">
-          {!auditResult ? (
+          {!result ? (
             <motion.div
               key="input-form"
               initial={{ opacity: 0, y: 15 }}
@@ -334,21 +469,18 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
               exit={{ opacity: 0, y: -15 }}
               className="p-8 md:p-10 space-y-10"
             >
-              {/* Hidden file selector input */}
               <input
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept=".txt,.pdf,.doc,.docx"
+                accept=".txt,text/plain"
                 className="hidden"
               />
 
-              {/* Toast / Notification Banner */}
               {notification && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
                   className={`p-4 rounded-2xl text-xs font-black flex items-center justify-between gap-3 border ${
                     notification.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
                     notification.type === 'error' ? 'bg-red-50 text-red-800 border-red-200' :
@@ -359,8 +491,8 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>{notification.message}</span>
                   </div>
-                  <button 
-                    onClick={() => setNotification(null)} 
+                  <button
+                    onClick={() => setNotification(null)}
                     className="hover:opacity-75 transition-opacity px-2 text-sm font-bold leading-none cursor-pointer"
                   >
                     ✕
@@ -368,11 +500,10 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                 </motion.div>
               )}
 
-              {/* Quick Preset Selector */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-slate-500 justify-start">
                   <FileEdit size={16} className="text-emerald-600" />
-                  <span className="text-xs font-black uppercase tracking-wider">Select a Sample Contract Template</span>
+                  <span className="text-xs font-black uppercase tracking-wider">Load a sample contract (fictitious text)</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {TEMPLATE_CONTRACTS.map((tpl, i) => (
@@ -383,9 +514,9 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                     >
                       <div className="font-extrabold text-slate-800 flex justify-between items-center">
                         <span className="px-2 py-0.5 bg-slate-200 text-slate-700 font-mono text-[9px] rounded-md font-bold group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                          💥 {tpl.incoterm} term
+                          {tpl.incoterm}
                         </span>
-                        <span>Template {i + 1}</span>
+                        <span>Sample {i + 1}</span>
                       </div>
                       <p className="font-black text-slate-900 text-sm group-hover:text-emerald-700 transition-colors">{tpl.title}</p>
                       <p className="text-slate-500 leading-relaxed font-semibold">{tpl.description}</p>
@@ -394,75 +525,61 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                 </div>
               </div>
 
-              {/* Drag and Drop / Custom Paste area */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                {/* Input Panel */}
                 <div className="lg:col-span-8 flex flex-col space-y-3 text-left">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-slate-600 text-xs">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-slate-500">Max 100,000 characters</span>
                       <span className="text-slate-300">|</span>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="font-black text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1.5 cursor-pointer font-sans"
                       >
                         <Upload size={12} />
-                        Upload File (.txt, .pdf, .docx)
+                        Upload text file (.txt)
                       </button>
-                      {isWritingManually && contractText.length === 0 && (
-                        <>
-                          <span className="text-slate-300">|</span>
-                          <button
-                            type="button"
-                            onClick={() => setIsWritingManually(false)}
-                            className="font-black text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1.5 cursor-pointer font-sans animate-fade-in"
-                          >
-                            Show Upload Options
-                          </button>
-                        </>
-                      )}
                     </div>
-                    <span className="font-black text-slate-900">Contract Text or Logistics Clause:</span>
+                    <span className="font-black text-slate-900">Contract text or delivery clause:</span>
                   </div>
 
-                  <div 
+                  <div
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                     className="relative border-2 border-dashed border-slate-200 rounded-[2rem] bg-slate-50/50 hover:bg-slate-50/90 hover:border-emerald-500 transition-colors p-4 flex flex-col min-h-[350px]"
                   >
                     <textarea
                       value={contractText}
+                      maxLength={100000}
                       onChange={(e) => setContractText(e.target.value)}
-                      placeholder="Paste your international sales contract text here, or drag & drop a .txt file..."
+                      placeholder="Paste the text of your sales contract or delivery clause here, or drop a .txt file..."
                       className="w-full h-full min-h-[310px] bg-transparent outline-none border-none p-4 text-slate-800 text-sm leading-relaxed font-semibold resize-y"
                     />
 
                     {contractText.length === 0 && !isWritingManually && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 space-y-4 bg-slate-50 border border-slate-100 rounded-[2rem]">
-                        <Upload size={40} className="text-emerald-600 animate-pulse" />
-                        <div className="text-center space-y-1">
-                          <p className="text-sm font-black text-slate-700">Drag & Drop contract file here</p>
-                          <p className="text-xs text-slate-400">Supports .txt, .pdf, .doc, .docx formats</p>
+                        <Upload size={40} className="text-emerald-600" />
+                        <div className="text-center space-y-1 px-6">
+                          <p className="text-sm font-black text-slate-700">Drop a plain-text (.txt) file here</p>
+                          <p className="text-xs text-slate-400">PDF and Word files are not read by this prototype. Copy their text and paste it instead.</p>
                         </div>
                         <span className="text-xs text-slate-300 font-bold">— OR —</span>
                         <div className="flex flex-col sm:flex-row items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => setIsWritingManually(true)}
                             className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-2"
                           >
-                            <Upload size={14} />
-                            Select File from Computer
+                            <FileText size={14} />
+                            Write / Paste Text
                           </button>
-                          
                           <button
                             type="button"
-                            onClick={() => setIsWritingManually(true)}
-                            className="px-6 py-2.5 bg-slate-250 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-6 py-2.5 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2"
                           >
-                            <FileText size={14} className="text-slate-600" />
-                            Write / Paste Text
+                            <Upload size={14} className="text-slate-600" />
+                            Select .txt File
                           </button>
                         </div>
                       </div>
@@ -470,618 +587,108 @@ No specific carbon reporting or Scope 3 emissions allocation is defined for the 
                   </div>
                 </div>
 
-                {/* Left Informational Desk / Audit Button Panel */}
                 <div className="lg:col-span-4 flex flex-col justify-between bg-emerald-50/40 p-6 md:p-8 rounded-[2rem] border border-emerald-100/60 text-left space-y-6">
                   <div className="space-y-6">
                     <h3 className="text-lg font-black text-emerald-950 flex items-center justify-start gap-2">
                       <ShieldCheck className="text-emerald-700" size={20} />
-                      Three Pillars of Contract Audit
+                      What is checked
                     </h3>
-                    
+
                     <ul className="space-y-4 text-xs font-semibold text-emerald-900 leading-relaxed">
                       <li className="flex items-start gap-2.5">
                         <div className="mt-1.5 w-1.5 h-1.5 bg-emerald-700 rounded-full flex-shrink-0" />
                         <span className="text-slate-600 text-[11px]">
-                          <strong>Incoterms® 2020 Risk Transfer:</strong> Realignment of risk handovers and cost allocation with core ICC standards.
+                          <strong>Incoterms® 2020 rule:</strong> rule, edition and named place stated; rule fits the mode of transport; risk-transfer and insurance wording against the rule.
                         </span>
                       </li>
                       <li className="flex items-start gap-2.5">
                         <div className="mt-1.5 w-1.5 h-1.5 bg-emerald-700 rounded-full flex-shrink-0" />
                         <span className="text-slate-600 text-[11px]">
-                          <strong>Green Logistics & ESG:</strong> Binding Scope 3 emission metrics, carbon tracking, and eco-friendly packaging.
+                          <strong>Letter of credit:</strong> reference to UCP 600, typical documents for the rule, and document demands the seller may be unable to meet.
                         </span>
                       </li>
                       <li className="flex items-start gap-2.5">
                         <div className="mt-1.5 w-1.5 h-1.5 bg-emerald-700 rounded-full flex-shrink-0" />
                         <span className="text-slate-600 text-[11px]">
-                          <strong>Documentary Compliance:</strong> Harmonization with international banking standard requirements under UCP 600 & ISBP 821.
+                          <strong>Transport-emission data:</strong> whether a data clause exists and whether it sits with the party that contracts the carriage.
                         </span>
                       </li>
                     </ul>
 
                     <div className="bg-white p-4 rounded-2xl border border-emerald-100 text-[11px] text-slate-500 font-semibold leading-relaxed">
-                      Our advanced audit engine processes each article instantly, detecting logical conflicts, carrier mismatch hazards, and documentation loopholes.
+                      The screening searches for keywords and simple patterns. It cannot interpret clauses, and the text you paste is processed in your browser only; it is not stored or sent anywhere.
                     </div>
                   </div>
 
                   <button
-                    onClick={executeAudit}
-                    disabled={isAuditing || !contractText.trim()}
+                    onClick={executeScreening}
+                    disabled={!contractText.trim()}
                     className={`w-full py-4 rounded-xl text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-colors ${
-                      contractText.trim() 
-                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 cursor-pointer' 
+                      contractText.trim()
+                        ? 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 cursor-pointer'
                         : 'bg-slate-300 pointer-events-none'
                     }`}
                   >
-                    {isAuditing ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Analyzing text...
-                      </span>
-                    ) : (
-                      <>
-                        <Sparkles size={16} />
-                        Audit Contract
-                      </>
-                    )}
+                    <ListChecks size={16} />
+                    Run Check
                   </button>
                 </div>
               </div>
-
-              {/* Progress Simulation Overlay */}
-              {isAuditing && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-slate-900/10 backdrop-blur-sm p-8 rounded-[2rem] border border-emerald-100 flex flex-col items-center justify-center space-y-4"
-                >
-                  <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-slate-800 font-black text-sm">{auditStepMessage}</p>
-                  <div className="w-64 bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-600 animate-pulse w-4/5" />
-                  </div>
-                </motion.div>
-              )}
             </motion.div>
           ) : (
             <motion.div
-              key="audit-results"
+              key="screening-results"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               className="p-8 md:p-10 space-y-8 text-left"
             >
-              {/* Score Dashboard Header */}
-              <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-5 text-left w-full md:w-auto">
-                  <div className={`w-20 h-20 rounded-full flex flex-col items-center justify-center font-black text-2xl ${
-                    auditResult.score >= 80 ? 'bg-emerald-100 text-emerald-800' :
-                    auditResult.score >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {auditResult.score}%
-                    <span className="text-[9px] uppercase font-bold text-slate-500">Audit Score</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-slate-400 font-bold text-xs uppercase tracking-wider">Detected Incoterm</div>
-                    <div className="text-slate-900 font-black text-lg">{auditResult.incoterm}</div>
-                    <div className="text-slate-500 text-[10px] font-semibold">{auditResult.rawLength} characters • Audited at: {auditResult.timestamp}</div>
-                  </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="screening-summary">
+                <div className="space-y-1">
+                  <div className="text-slate-400 font-bold text-xs uppercase tracking-wider">Rule identified in the text</div>
+                  <div className="text-slate-900 font-black text-2xl" id="screening-rule">{result.ruleName}</div>
+                  <div className="text-slate-500 text-[11px] font-semibold">{result.rawLength} characters · checked at {result.timestamp}</div>
                 </div>
-
-                <div className="flex gap-4 w-full md:w-auto">
-                  <span className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 ${
-                    auditResult.creditComplianceStatus === 'Compliant' ? 'bg-emerald-100 text-emerald-800' :
-                    auditResult.creditComplianceStatus === 'Slight Mismatch' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    Documentary Status: {auditResult.creditComplianceStatus}
+                <div className="flex flex-wrap gap-3">
+                  <span className={`px-4 py-2 rounded-xl text-xs font-black ${result.reviewCount > 0 ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800'}`} id="screening-count">
+                    {result.reviewCount} of {result.checks.length} checks to review
                   </span>
-                  <span className={`px-4 py-2 rounded-xl text-xs font-black ${auditResult.sustainabilityGradeColor}`}>
-                    Sustainability Grade: {auditResult.sustainabilityGrade}
+                  <span className="px-4 py-2 rounded-xl text-xs font-black bg-slate-200 text-slate-700">
+                    Keyword screening · not legal advice
                   </span>
                 </div>
               </div>
 
-              {/* Live Compliance Digital Twin (Interactive Visual Dashboard) */}
-              <div className="bg-slate-950 text-white rounded-[2.5rem] p-6 md:p-8 border border-white/10 space-y-8 relative overflow-hidden shadow-2xl">
-                {/* Decorative background gradients */}
-                <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
-                
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6 relative z-10">
-                  <div className="text-left space-y-1">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
-                      <Sparkles size={10} />
-                      Live Digital Twin Simulation
+              <div className="space-y-4" id="screening-checks">
+                {result.checks.map((check) => (
+                  <div key={check.id} className={`border rounded-[1.5rem] p-6 space-y-3 ${STATUS_STYLE[check.status].card}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                        {check.status === 'ok' && <CheckCircle2 className="text-emerald-600 flex-shrink-0" size={18} />}
+                        {check.status === 'review' && <AlertTriangle className="text-amber-600 flex-shrink-0" size={18} />}
+                        {check.status === 'info' && <Info className="text-slate-500 flex-shrink-0" size={18} />}
+                        {check.title}
+                      </h4>
+                      <span className={`self-start px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${STATUS_STYLE[check.status].badge}`}>
+                        {STATUS_STYLE[check.status].label}
+                      </span>
                     </div>
-                    <h3 className="text-xl font-black tracking-tight text-white">Three-Pillar Visual Trade Sync Map</h3>
-                    <p className="text-slate-400 text-xs font-semibold">
-                      Real-time visual diagram generated based on detected contract terms ({auditResult?.incoterm?.split(' ')[0]}), showing logistics handover, carbon splits, and documentary finance compliance.
-                    </p>
-                  </div>
-                  <div className="text-[10px] bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl font-mono text-slate-300">
-                    STATUS: SYNCED
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
-                  {/* Pillar 1: Cost & Risk Shipping Transfer Map */}
-                  <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 flex flex-col justify-between space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="p-1 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 rounded-lg font-black font-mono">STEP 1</span>
-                        <h4 className="text-sm font-black text-white">Physical Handover Flow</h4>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-bold">Incoterms® 2020</span>
-                    </div>
-
-                    {/* Shipping Line Diagram */}
-                    <div className="space-y-4 py-2">
-                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
-                        <span>Origin</span>
-                        <span>Destination</span>
-                      </div>
-
-                      {/* Visual Dots and connectors */}
-                      <div className="relative flex justify-between items-center px-2">
-                        {/* Connecting Line underlay */}
-                        <div className="absolute left-4 right-4 h-1 bg-slate-800 top-1/2 -translate-y-1/2 z-0" />
-                        
-                        {/* Handover flow color representation */}
-                        {auditResult?.incoterm?.includes('EXW') && (
-                          <div className="absolute left-4 w-4 h-1 bg-emerald-500 top-1/2 -translate-y-1/2 z-0" />
-                        )}
-                        {auditResult?.incoterm?.includes('FCA') && (
-                          <div className="absolute left-4 w-1/4 h-1 bg-emerald-500 top-1/2 -translate-y-1/2 z-0" />
-                        )}
-                        {auditResult?.incoterm?.includes('CIF') && (
-                          <div className="absolute left-1/4 w-2/4 h-1 bg-emerald-500 top-1/2 -translate-y-1/2 z-0" />
-                        )}
-
-                        {/* Node 1: Origin Seller Factory */}
-                        <div className="relative z-10 flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-semibold text-xs ${
-                            auditResult?.incoterm?.includes('EXW') || auditResult?.incoterm?.includes('FCA') || auditResult?.incoterm?.includes('CIF') ? 'bg-emerald-500 text-white border-emerald-400 font-black' : 'bg-slate-800 text-slate-400 border-slate-750'
-                          }`}>
-                            <Warehouse size={14} />
-                          </div>
-                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Seller</span>
-                        </div>
-
-                        {/* Node 2: Port of Departure */}
-                        <div className="relative z-10 flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-semibold text-xs ${
-                            auditResult?.incoterm?.includes('FCA') || auditResult?.incoterm?.includes('CIF') ? 'bg-emerald-500 text-white border-emerald-400 font-black' : 'bg-slate-800 text-slate-400 border-slate-750'
-                          }`}>
-                            <Truck size={14} />
-                          </div>
-                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Export Port</span>
-                        </div>
-
-                        {/* Node 3: Maritime Sea */}
-                        <div className="relative z-10 flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center border font-semibold text-xs ${
-                            auditResult?.incoterm?.includes('CIF') ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-slate-800 text-slate-400 border-slate-750'
-                          }`}>
-                            <Ship size={14} />
-                          </div>
-                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Sea Voyage</span>
-                        </div>
-
-                        {/* Node 4: Buyer Port & Warehouse */}
-                        <div className="relative z-10 flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 text-slate-400 border border-slate-700 font-semibold text-xs">
-                            <Warehouse size={14} />
-                          </div>
-                          <span className="text-[9px] text-slate-400 mt-1 font-bold">Buyer</span>
-                        </div>
-                      </div>
-
-                      {/* Detail Labels */}
-                      <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-1.5">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-slate-400 font-bold">Risk Handover Point:</span>
-                          <span className="text-emerald-400 font-black">
-                            {auditResult?.incoterm?.includes('EXW') && "At Origin Factory Gate"}
-                            {auditResult?.incoterm?.includes('FCA') && "At Tokyo Container Yard"}
-                            {auditResult?.incoterm?.includes('CIF') && "At Departure Port (Buenos Aires)"}
-                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Specified by Term"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-slate-400 font-bold">Freight Booking By:</span>
-                          <span className="text-blue-400 font-black">
-                            {auditResult?.incoterm?.includes('EXW') && "Buyer (EXW)"}
-                            {auditResult?.incoterm?.includes('FCA') && "Buyer (FCA)"}
-                            {auditResult?.incoterm?.includes('CIF') && "Seller (CIF arranges freight)"}
-                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Refer to terms"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Mismatch Banner */}
-                    {auditResult?.incoterm?.includes('CIF') && (
-                      <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl flex items-start gap-2 mt-2">
-                        <span className="text-rose-400 text-xs">⚠️</span>
-                        <p className="text-[10px] text-rose-300 font-semibold leading-relaxed">
-                          <strong>Cost-Risk Swap Override Detected:</strong> Stating the seller remains liable until destination custom clearance conflicts with standard CIF departure risk guidelines. Shifts term effectively to DAP.
-                        </p>
-                      </div>
+                    <p className="text-sm text-slate-700 font-semibold leading-relaxed">{check.finding}</p>
+                    {check.evidence && (
+                      <p className="text-xs text-slate-600 font-semibold leading-relaxed bg-white/70 border border-slate-200 rounded-xl p-3">
+                        <span className="font-black text-slate-500 uppercase tracking-wider text-[10px] block mb-1">Text found</span>
+                        “{check.evidence}”
+                      </p>
                     )}
-                    {auditResult?.incoterm?.includes('EXW') && (
-                      <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl flex items-start gap-2 mt-2">
-                        <span className="text-amber-400 text-xs">💡</span>
-                        <p className="text-[10px] text-slate-300 font-semibold leading-relaxed">
-                          Under standard EXW, Seller holds zero shipping liability. Export customs clearing processes rest 100% on the foreign Buyer.
-                        </p>
-                      </div>
-                    )}
-                    {auditResult?.incoterm?.includes('FCA') && (
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl flex items-start gap-2 mt-2">
-                        <span className="text-emerald-400 text-xs">✅</span>
-                        <p className="text-[10px] text-slate-300 font-semibold leading-relaxed">
-                          Proper multimodal container term selection. Risk transitions seamlessly to Buyer at departure yard, with local export clearance assigned to seller.
-                        </p>
-                      </div>
+                    {check.basis && (
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Basis: {check.basis}</p>
                     )}
                   </div>
-
-                  {/* Pillar 2: Carbon Split Ledger */}
-                  <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 flex flex-col justify-between space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="p-1 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 rounded-lg font-black font-mono">STEP 2</span>
-                        <h4 className="text-sm font-black text-white">Scope 3 Emission Ledger</h4>
-                      </div>
-                      <span className="text-[10px] text-emerald-400 font-bold font-mono">CO₂ Split</span>
-                    </div>
-
-                    <div className="space-y-4 py-2">
-                      <div className="flex justify-between items-center text-[10px] font-bold">
-                        <span className="text-slate-400">Seller CO2 Share</span>
-                        <span className="text-slate-400">Buyer CO2 Share</span>
-                      </div>
-
-                      {/* Carbon Progression Split Bar */}
-                      <div className="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden flex">
-                        {auditResult?.incoterm?.includes('EXW') && (
-                          <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: '100%' }} />
-                        )}
-                        {auditResult?.incoterm?.includes('FCA') && (
-                          <>
-                            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: '8%' }} />
-                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: '92%' }} />
-                          </>
-                        )}
-                        {auditResult?.incoterm?.includes('CIF') && (
-                          <>
-                            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: '72%' }} />
-                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: '28%' }} />
-                          </>
-                        )}
-                        {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && (
-                          <>
-                            <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: '50%' }} />
-                            <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: '50%' }} />
-                          </>
-                        )}
-                      </div>
-
-                      {/* Legend and percentage readouts */}
-                      <div className="flex justify-between text-xs font-black">
-                        <div className="flex items-center gap-1.5 text-emerald-400">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block" />
-                          <span>
-                            {auditResult?.incoterm?.includes('EXW') && "Seller: 0%"}
-                            {auditResult?.incoterm?.includes('FCA') && "Seller: 8%"}
-                            {auditResult?.incoterm?.includes('CIF') && "Seller: 72%"}
-                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Seller: 50%"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-indigo-400">
-                          <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 block" />
-                          <span>
-                            {auditResult?.incoterm?.includes('EXW') && "Buyer: 100%"}
-                            {auditResult?.incoterm?.includes('FCA') && "Buyer: 92%"}
-                            {auditResult?.incoterm?.includes('CIF') && "Buyer: 28%"}
-                            {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Buyer: 50%"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Green commentary */}
-                      <div className="text-[10px] text-slate-300 font-semibold leading-relaxed bg-white/5 p-3 rounded-xl border border-white/5">
-                        {auditResult?.incoterm?.includes('EXW') && "⚠️ Carbon attribution: Because all transport moves are coordinated from the seller's yard, the buyer assumes 100% of Scope 3 logistics greenhouse footprints."}
-                        {auditResult?.incoterm?.includes('FCA') && "✅ Optimized split: Seller absorbs pre-carriage emissions (8%), while ocean carriage emissions are logged directly by the buyer."}
-                        {auditResult?.incoterm?.includes('CIF') && "⚡ High emission allocation: Exporter manages first-mile & long marine transit (72%). Selecting CIF forces the seller to track and claim carbon footprints."}
-                        {!auditResult?.incoterm?.includes('EXW') && !auditResult?.incoterm?.includes('FCA') && !auditResult?.incoterm?.includes('CIF') && "Emissions splits distribute based on changeover logistics gates of the specified term."}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[10px] text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-3 py-2 rounded-xl">
-                      <Leaf size={12} />
-                      <span className="font-extrabold uppercase font-mono">Scope 3 Split Compliant</span>
-                    </div>
-                  </div>
-
-                  {/* Pillar 3: Bank Doc Validation Matcher */}
-                  <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6 flex flex-col justify-between space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="p-1 px-2 text-[10px] bg-emerald-500/20 text-emerald-400 rounded-lg font-black font-mono">STEP 3</span>
-                        <h4 className="text-sm font-black text-white">UCP 600 Bank Doc Matrix</h4>
-                      </div>
-                      <span className="text-[10px] text-indigo-400 font-bold font-mono">L/C Audit</span>
-                    </div>
-
-                    {/* Sync Document Checklist Status */}
-                    <div className="space-y-3.5 py-1">
-                      {/* Doc 1: Invoice */}
-                      <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2 text-left">
-                          <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
-                          <span className="text-[11px] font-black text-white">Commercial Invoice</span>
-                        </div>
-                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] font-mono font-black rounded flex-shrink-0">MATCHED</span>
-                      </div>
-
-                      {/* Doc 2: Bill of Lading */}
-                      <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2 text-left">
-                          {auditResult?.incoterm?.includes('EXW') ? (
-                            <XCircle size={13} className="text-rose-500 flex-shrink-0" />
-                          ) : (
-                            <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
-                          )}
-                          <span className="text-[11px] font-black text-white">Ocean Bill of Lading</span>
-                        </div>
-                        <span className={`px-2 py-0.5 text-[8px] font-mono font-black rounded flex-shrink-0 ${
-                          auditResult?.incoterm?.includes('EXW') ? 'bg-rose-500/20 text-rose-400 animate-pulse' : 'bg-emerald-500/20 text-emerald-400'
-                        }`}>
-                          {auditResult?.incoterm?.includes('EXW') ? "DEADLOCK" : "MATCHED"}
-                        </span>
-                      </div>
-
-                      {/* Doc 3: Insurance Cert */}
-                      <div className="flex items-center justify-between bg-white/5 p-2.5 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2 text-left">
-                          {auditResult?.incoterm?.includes('CIF') ? (
-                            <AlertTriangle size={13} className="text-orange-400 flex-shrink-0" />
-                          ) : auditResult?.incoterm?.includes('EXW') || auditResult?.incoterm?.includes('FCA') ? (
-                            <CheckCircle2 size={13} className="text-slate-500 flex-shrink-0" />
-                          ) : (
-                            <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
-                          )}
-                          <span className="text-[11px] font-black text-white">Marine Insurance Policy</span>
-                        </div>
-                        <span className={`px-2 py-0.5 text-[8px] font-mono font-black rounded flex-shrink-0 ${
-                          auditResult?.incoterm?.includes('CIF') ? 'bg-orange-500/20 text-orange-400 animate-pulse' : 'bg-slate-500/20 text-slate-400'
-                        }`}>
-                          {auditResult?.incoterm?.includes('CIF') ? "LATE SPEC" : "OPTIONAL"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Warning overlay description */}
-                    {auditResult?.incoterm?.includes('CIF') && (
-                      <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-2xl text-[10px] text-orange-200 font-semibold leading-relaxed">
-                        ⚠️ <strong>UCP 600 Art 28 Warning:</strong> Standard banks reject insurance documents dated after the transport loading date. Restating custom 3-day insurance handovers creates compliance refusal.
-                      </div>
-                    )}
-                    {auditResult?.incoterm?.includes('EXW') && (
-                      <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-2xl text-[10px] text-rose-300 font-semibold leading-relaxed animate-pulse">
-                        ❌ <strong>L/C Non-Compliance:</strong> EXW delivery shifts carrier booking completely to Buyer. Seller cannot guarantee clean Carrier-issued Bills of Lading to trigger banks releasing funds.
-                      </div>
-                    )}
-                    {auditResult?.incoterm?.includes('FCA') && (
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-2xl text-[10px] text-emerald-300 font-semibold leading-relaxed">
-                        ✅ <strong>UCP Compliance Clear:</strong> Documentary presentations align properly under FCA procedures, preventing bank liquidity delays.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Tabs */}
-              <div className="flex justify-start border-b border-slate-200 gap-2 overflow-x-auto pb-px">
-                {[
-                  { id: 'overview', label: 'Risk & Executive Summary', icon: <AlertTriangle size={14} /> },
-                  { id: 'incoterms', label: 'Incoterms® 2020 Alignment', icon: <Globe size={14} /> },
-                  { id: 'sustainability', label: 'Green Logistics & Scope 3', icon: <Leaf size={14} /> },
-                  { id: 'compliance', label: 'Documentary & UCP 600', icon: <Coins size={14} /> }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveAuditTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-5 py-3 text-xs md:text-sm font-black tracking-tight border-b-2 transition-all ${
-                      activeAuditTab === tab.id 
-                        ? 'border-emerald-600 text-emerald-700 bg-emerald-50/20' 
-                        : 'border-transparent text-slate-500 hover:text-slate-900'
-                    }`}
-                  >
-                    {tab.icon}
-                    {tab.label}
-                  </button>
                 ))}
               </div>
 
-              {/* Tabs Content */}
-              <div className="min-h-[300px]">
-                {activeAuditTab === 'overview' && (
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  >
-                    {/* RISK CARD */}
-                    <div className="bg-red-50/40 border border-red-100 rounded-[2.5rem] p-8 space-y-6 text-left">
-                      <div className="flex justify-between items-center border-b border-red-100 pb-4">
-                        <span className="px-3 py-1 bg-red-100 text-red-800 text-[10px] font-black rounded-lg">Immediate Remediation Critical</span>
-                        <h4 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                          <AlertTriangle className="text-red-500" size={18} />
-                          Identified Contractual Risks
-                        </h4>
-                      </div>
-
-                      {auditResult.incotermsRiskList.length > 0 ? (
-                        <div className="space-y-4">
-                          {auditResult.incotermsRiskList.map((risk: string, i: number) => (
-                            <div key={i} className="flex gap-3 items-start text-sm text-slate-800 font-semibold leading-relaxed">
-                              <XCircle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
-                              <span>{risk}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center py-8 text-slate-400 space-y-2">
-                          <CheckCircle2 className="text-emerald-500" size={32} />
-                          <p className="text-xs font-black">Excellent! No major contractual risk or logical discrepancies detected.</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* RECOMMENDATION / NEXT STEPS */}
-                    <div className="bg-emerald-50/20 border border-emerald-100 rounded-[2.5rem] p-8 space-y-6 text-left">
-                      <div className="flex justify-between items-center border-b border-emerald-100 pb-4">
-                        <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-lg">Recommended Remedial Actions</span>
-                        <h4 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                          <CheckCircle2 className="text-emerald-600" size={18} />
-                          Amendments Needed in Contract Text
-                        </h4>
-                      </div>
-
-                      <div className="space-y-4 font-semibold text-slate-700 text-sm leading-relaxed">
-                        <p className="flex items-start gap-2 text-slate-800">
-                          <CornerDownRight size={14} className="text-emerald-600 flex-shrink-0 mt-1" />
-                          <span>Specify the exact first-mile vehicle details and terminal hub coordinates in delivery clauses to avoid customs clearance ambiguities.</span>
-                        </p>
-                        <p className="flex items-start gap-2 text-slate-800">
-                          <CornerDownRight size={14} className="text-emerald-600 flex-shrink-0 mt-1" />
-                          <span>Align insurance presentation terms strictly with shipping dates, ensuring the certificate or policy is dated on or before the Bill of Lading.</span>
-                        </p>
-                        <p className="flex items-start gap-2 text-slate-800">
-                          <CornerDownRight size={14} className="text-emerald-600 flex-shrink-0 mt-1" />
-                          <span>Insert a binding clause requiring secondary maritime carrier fuel efficiency reporting to ensure compliant Scope 3 inventory for the buyer.</span>
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeAuditTab === 'incoterms' && (
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    className="space-y-6 text-left"
-                  >
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                      <h4 className="text-lg font-black text-slate-900 mb-2">Risk & Cost Allocation under ICC Incoterms® 2020</h4>
-                      <p className="text-slate-500 text-xs font-semibold leading-relaxed">
-                        The selected trade term must seamlessly synchronize with insurance routing, freight booking control, and customs clearance obligations.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-sky-50/[0.15] border border-sky-100 rounded-[2rem] p-6 space-y-4">
-                        <h5 className="font-extrabold text-sky-950 border-b border-sky-100 pb-2">Verified Standard Allocations</h5>
-                        {auditResult.incotermsCompliantList.length > 0 ? (
-                          <div className="space-y-3">
-                            {auditResult.incotermsCompliantList.map((item: string, i: number) => (
-                              <div key={i} className="flex gap-2 items-start text-xs text-slate-700 font-bold">
-                                <CheckCircle2 className="text-emerald-500 flex-shrink-0 mt-0.5" size={14} />
-                                <span>{item}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-slate-400 text-xs font-bold">No active standard alignments could be identified in the text.</p>
-                        )}
-                      </div>
-
-                      <div className="bg-red-50/[0.15] border border-red-100 rounded-[2rem] p-6 space-y-4">
-                        <h5 className="font-extrabold text-red-950 border-b border-red-100 pb-2">Logical & Legal Redrafts Required</h5>
-                        <div className="space-y-3">
-                          {auditResult.incotermsRiskList.map((item: string, i: number) => (
-                            <div key={i} className="flex gap-2 items-start text-xs text-slate-700 font-bold">
-                              <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={14} />
-                              <span>{item}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeAuditTab === 'sustainability' && (
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left"
-                  >
-                    <div className="md:col-span-4 bg-emerald-50/30 border border-emerald-100/60 p-6 rounded-[2rem] flex flex-col justify-between items-center text-center space-y-4">
-                      <div className="space-y-2">
-                        <Leaf className="text-emerald-600 mx-auto" size={32} />
-                        <h5 className="font-extrabold text-slate-900">Carbon Reduction Grade</h5>
-                        <div className="text-5xl font-black text-emerald-700">{auditResult.sustainabilityGrade}</div>
-                        <p className="text-slate-400 text-[10px] font-bold">Scope 3 Emission Optimization Rating</p>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-xl border border-emerald-100 w-full text-[10px] text-emerald-800 font-bold">
-                        {auditResult.carbonSavingsFactor}
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-8 space-y-6">
-                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-3">
-                        <h4 className="text-lg font-black text-slate-900">CSDDD & Emission Reporting Compliance</h4>
-                        <p className="text-slate-500 text-xs font-semibold leading-relaxed">
-                          International shippers dispatching goods ending in the EU should distribute multi-segment carbon tracking accountability evenly to enable standard ESG inventory filing.
-                        </p>
-                      </div>
-
-                      <div className="space-y-3">
-                        {auditResult.sustainabilityRiskList.map((err: string, i: number) => (
-                          <div key={i} className="flex gap-3 justify-start items-start text-xs text-slate-700 font-bold">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
-                            <span>{err}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeAuditTab === 'compliance' && (
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    className="space-y-6 text-left"
-                  >
-                    <div className="bg-indigo-50/20 border border-indigo-100 p-6 rounded-[2rem] flex justify-between items-center gap-4">
-                      <Coins className="text-indigo-600 animate-pulse" size={32} />
-                      <div className="space-y-1">
-                        <h4 className="text-lg font-black text-indigo-950">Letter of Credit & UCP 600 Compliance</h4>
-                        <p className="text-slate-500 text-xs font-semibold leading-relaxed">
-                          Bank letters of credit act as strict documentary exchanges. Discrepancy-free document matching is necessary to avoid shipping and liquidity freeze.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {auditResult.creditComplianceRiskList.map((item: string, i: number) => (
-                        <div key={i} className="flex gap-3 justify-start items-start bg-slate-50 border border-slate-150 p-5 rounded-2xl text-xs text-slate-700 font-bold">
-                          <XCircle className="text-amber-500 flex-shrink-0 mt-0.5" size={16} />
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="bg-indigo-50/30 p-4 rounded-xl text-[10px] text-indigo-900 font-bold border border-indigo-100/50 leading-relaxed">
-                      Core Principle: Under ICC Uniform Customs and Practice (UCP 600), banks deal strictly with documents and not with goods. Any structural mismatch between the contract Incoterm and presented transport documents triggers immediate discrepancies, causing costly payment delays.
-                    </div>
-                  </motion.div>
-                )}
+              <div className="bg-indigo-50/30 p-5 rounded-2xl text-xs text-indigo-950 font-semibold border border-indigo-100/60 leading-relaxed">
+                <strong>What this screening does not do.</strong> It looks for keywords and simple patterns and compares them with the ClearTrade rule data. It does not interpret clauses, read attachments or check documents, and a point marked “Information” or “No issue found” is not a confirmation that the contract is correct. Have the contract reviewed by a qualified adviser before signing.
               </div>
             </motion.div>
           )}

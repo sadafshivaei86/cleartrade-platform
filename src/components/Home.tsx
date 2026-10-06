@@ -309,7 +309,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                 <FeatureBlock 
                   icon={<Leaf className="text-emerald-600" size={32} />}
                   title="Carbon Data Access"
-                  description="See which party contracts each transport leg and can therefore obtain its emission data for Scope 3 requests."
+                  description="See which party contracts each transport leg and is therefore best placed to request its emission data for Scope 3 reporting."
                 />
                 <FeatureBlock 
                   icon={<FileText className="text-emerald-600" size={32} />}
