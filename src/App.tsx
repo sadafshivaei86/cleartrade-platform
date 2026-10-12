@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Truck, Ship, ArrowRight, ShieldCheck, HelpCircle, Globe, FileText, Leaf, Columns } from 'lucide-react';
+import { Truck, Ship, ArrowRight, ShieldCheck, HelpCircle, Globe, FileText, Leaf, Columns, Menu, X } from 'lucide-react';
 import { DECISION_TREE } from './data/incoterms';
 import ResultDisplay from './components/ResultDisplay';
 import Home from './components/Home';
@@ -12,6 +12,7 @@ export default function App() {
   const [currentStepId, setCurrentStepId] = useState<string>('START_ROLE');
   const [history, setHistory] = useState<string[]>([]);
   const [result, setResult] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const currentStep = DECISION_TREE[currentStepId];
 
@@ -53,21 +54,25 @@ export default function App() {
   };
 
   const startWizard = () => {
+    setMenuOpen(false);
     reset();
     setView('wizard');
   };
 
   const startCompare = () => {
+    setMenuOpen(false);
     reset();
     setView('compare');
   };
 
   const startContract = () => {
+    setMenuOpen(false);
     reset();
     setView('contract');
   };
 
   const goHome = () => {
+    setMenuOpen(false);
     setView('home');
     reset();
   };
@@ -75,7 +80,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]/95 text-slate-900 font-sans selection:bg-emerald-100">
       {/* Navbar */}
-      <nav className="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+      <nav className="bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-3 md:py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex flex-col cursor-pointer group" onClick={goHome}>
             <div className="flex items-center gap-2.5">
@@ -91,6 +96,16 @@ export default function App() {
               © 2026 ClearTrade. All rights reserved. Developed by <span className="text-emerald-600 font-bold">Sadaf Shivaei</span>
             </span>
           </div>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(o => !o)}
+            className="md:hidden p-2.5 -mr-1 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            id="mobile-menu-btn"
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
           <div className="hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
             <button onClick={goHome} className="hover:text-emerald-600 transition-colors">Intelligence</button>
             <button onClick={startCompare} className={`hover:text-emerald-600 transition-colors ${view === 'compare' ? 'text-emerald-600' : ''}`}>Compare</button>
@@ -114,6 +129,30 @@ export default function App() {
             </button>
           </div>
         </div>
+        {menuOpen && (
+          <div className="md:hidden max-w-7xl mx-auto pt-3 mt-3 border-t border-slate-200 flex flex-col text-sm font-black uppercase tracking-[0.15em] text-slate-600" id="mobile-menu">
+            <button onClick={goHome} className="text-left py-3 hover:text-emerald-600">Intelligence</button>
+            <button onClick={startCompare} className={`text-left py-3 hover:text-emerald-600 ${view === 'compare' ? 'text-emerald-600' : ''}`}>Compare</button>
+            <button onClick={startWizard} className={`text-left py-3 hover:text-emerald-600 ${view === 'wizard' ? 'text-emerald-600' : ''}`}>Analyzer</button>
+            <button onClick={startContract} className={`text-left py-3 hover:text-emerald-600 ${view === 'contract' ? 'text-emerald-600' : ''}`}>Review Contract</button>
+            <button
+              onClick={() => {
+                goHome();
+                setTimeout(() => document.getElementById('standards')?.scrollIntoView({ behavior: 'smooth' }), 150);
+              }}
+              className="text-left py-3 hover:text-emerald-600"
+            >
+              Standards
+            </button>
+            <button
+              onClick={startWizard}
+              className="mt-2 mb-1 px-6 py-3.5 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2"
+            >
+              Start Trial
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        )}
       </nav>
 
       <main className="w-full">
@@ -129,7 +168,7 @@ export default function App() {
               <Home onStartWizard={startWizard} onStartCompare={startCompare} onStartContract={startContract} />
             </motion.div>
           ) : view === 'compare' ? (
-            <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 min-h-[70vh]">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-20 min-h-[70vh]">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -139,7 +178,7 @@ export default function App() {
               </motion.div>
             </div>
           ) : view === 'contract' ? (
-            <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 min-h-[70vh]">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-20 min-h-[70vh]">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -149,7 +188,7 @@ export default function App() {
               </motion.div>
             </div>
           ) : (
-            <div className="max-w-5xl mx-auto px-6 py-12 md:py-20 min-h-[70vh]">
+            <div className="max-w-5xl mx-auto px-4 md:px-6 py-8 md:py-20 min-h-[70vh]">
               <AnimatePresence mode="wait">
                 {result ? (
                   <ResultDisplay code={result} onReset={reset} />
@@ -159,10 +198,10 @@ export default function App() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-12"
+                    className="space-y-8 md:space-y-12"
                   >
                     {/* Progress Indicator */}
-                    <div className="flex items-center gap-2 mb-12">
+                    <div className="flex items-center gap-2 mb-8 md:mb-12">
                       {Array.from({ length: progressSegments }).map((_, i) => (
                         <div 
                           key={i} 
@@ -192,19 +231,19 @@ export default function App() {
                       </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-2 md:pt-8">
                       {currentStep?.options.map((option, idx) => (
                         <button
                           key={idx}
                           onClick={() => handleOptionSelect(option)}
-                          className="group relative p-12 bg-white border-2 border-slate-100 rounded-[3rem] text-left hover:border-emerald-500 hover:shadow-4xl hover:shadow-emerald-500/10 transition-all duration-500 overflow-hidden"
+                          className="group relative p-6 md:p-12 bg-white border-2 border-slate-100 rounded-[2rem] md:rounded-[3rem] text-left hover:border-emerald-500 hover:shadow-4xl hover:shadow-emerald-500/10 transition-all duration-500 overflow-hidden"
                           id={`option-${idx}`}
                         >
-                          <div className="flex justify-between items-center relative z-10">
-                            <span className="text-3xl font-black text-slate-800 group-hover:text-emerald-700 transition-colors tracking-tight">
+                          <div className="flex justify-between items-center gap-4 relative z-10">
+                            <span className="text-xl md:text-3xl font-black text-slate-800 group-hover:text-emerald-700 transition-colors tracking-tight">
                               {option.label}
                             </span>
-                            <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-12">
+                            <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all transform group-hover:rotate-12">
                               <ArrowRight size={32} />
                             </div>
                           </div>
@@ -213,7 +252,7 @@ export default function App() {
                       ))}
                     </div>
 
-                    <div className="flex items-center gap-6 mt-16 pt-8 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center gap-4 md:gap-6 mt-10 md:mt-16 pt-8 border-t border-slate-100">
                       <button
                         onClick={handleBack}
                         className="text-slate-400 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all bg-white px-8 py-4 rounded-2xl border border-slate-100 hover:border-slate-300"
@@ -237,9 +276,9 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="w-full bg-slate-950 py-24 px-6 mt-32">
+      <footer className="w-full bg-slate-950 py-16 md:py-24 px-6 mt-16 md:mt-32">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-16 mb-20">
+          <div className="grid md:grid-cols-4 gap-10 md:gap-16 mb-12 md:mb-20">
             <div className="md:col-span-2 space-y-8">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2.5">
@@ -281,7 +320,7 @@ export default function App() {
             <p className="text-slate-400 text-[11px] font-medium tracking-wide">
               © 2026 ClearTrade. All rights reserved. Developed by <span className="text-emerald-500 font-bold">Sadaf Shivaei</span>
             </p>
-            <div className="flex gap-10 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">
+            <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">
               <a href="#" className="hover:text-white transition-colors">Terms</a>
               <a href="#" className="hover:text-white transition-colors">Privacy</a>
               <a href="#" className="hover:text-white transition-colors">Cookies</a>

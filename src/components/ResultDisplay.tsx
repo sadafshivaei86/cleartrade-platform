@@ -497,7 +497,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
     >
       {/* Header Card */}
       <div className={`bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 ${isPrintingReport ? 'print:hidden' : ''}`} id="result-header">
-        <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+        <div className="bg-slate-900 p-6 md:p-10 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Globe size={180} />
           </div>
@@ -507,8 +507,8 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                 <Shield size={16} />
                 Strategic Recommendation
               </div>
-              <h1 className="text-7xl font-black tracking-tighter" id="incoterm-code">{info.code}</h1>
-              <p className="text-2xl text-slate-300 mt-2 font-semibold">{info.name}</p>
+              <h1 className="text-6xl md:text-7xl font-black tracking-tighter" id="incoterm-code">{info.code}</h1>
+              <p className="text-xl md:text-2xl text-slate-300 mt-2 font-semibold">{info.name}</p>
             </div>
             <div className="flex flex-col gap-3 print:hidden w-full md:w-auto">
               <button
@@ -536,10 +536,10 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-10 space-y-12"
+            className="p-4 md:p-10 space-y-8 md:space-y-12"
           >
             {/* Quick Responsibility Summary */}
-            <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-8">
+            <div className="bg-slate-50 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 space-y-8">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 pb-6">
                 <div>
                   <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Responsibility Summary</h2>
@@ -562,7 +562,9 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                 const hierarchy = getHierarchy(code);
                 const lastSeller = hierarchy.stages.reduce((acc, s, i) => (s.owner === 'S' ? i : acc), 0);
                 return (
-                  <div className="pt-16 pb-6 px-6">
+                  <div className="-mx-5 md:mx-0 overflow-x-auto md:overflow-visible custom-scrollbar">
+                  <p className="md:hidden px-5 pt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Swipe to see the full chain →</p>
+                  <div className="pt-16 pb-6 px-6 min-w-[600px] md:min-w-0">
                     <div className="relative pt-8">
                       {/* Legend/Zone Indicators */}
                       <div className="absolute -top-6 left-0 w-full flex justify-between px-2">
@@ -653,11 +655,12 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                       </div>
                     </div>
                   </div>
+                  </div>
                 );
               })()}
 
               {/* Combined Roadmap & Duties */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <SummaryCard 
                   icon={<Package size={20} />} 
                   label="Packaging & Handling" 
@@ -684,7 +687,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                 />
               </div>
 
-              <div className="pt-6 border-t border-slate-200 flex flex-wrap gap-10">
+              <div className="pt-6 border-t border-slate-200 flex flex-wrap gap-6 md:gap-10">
                 <div className="flex items-center gap-3">
                   <Shield size={18} className="text-slate-400" />
                   <div className="flex flex-col">
@@ -707,7 +710,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
             </div>
 
             {/* Redesigned GOLDEN CENTRE of the site: Explore Analytics Context Hub */}
-            <div className="bg-gradient-to-b from-[#e3edf7] via-[#ebf3fa] to-[#e4eef6] border border-sky-200/60 rounded-[3.5rem] p-8 md:p-14 shadow-[0_40px_100px_-15px_rgba(15,82,143,0.18)] relative overflow-hidden my-14 animate-fade-in text-center space-y-12">
+            <div className="bg-gradient-to-b from-[#e3edf7] via-[#ebf3fa] to-[#e4eef6] border border-sky-200/60 rounded-[2rem] md:rounded-[3.5rem] p-5 md:p-14 shadow-[0_40px_100px_-15px_rgba(15,82,143,0.18)] relative overflow-hidden my-8 md:my-14 animate-fade-in text-center space-y-8 md:space-y-12">
               
               {/* Dynamic Cyber Circuit Wire Graphic Background Line network behind cards */}
               <div className="absolute inset-0 z-0 pointer-events-none hidden md:block select-none overflow-hidden">
@@ -912,7 +915,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                       setActiveTab(tab.id as TabType);
                       setViewMode('detail');
                     }}
-                    className={`flex flex-col items-stretch justify-between text-left gap-5 p-6 rounded-[2.5rem] transition-all duration-500 bg-gradient-to-b from-[#1b2f3d]/95 via-[#101d26]/98 to-[#0a1118]/100 border border-white/20 hover:border-cyan-400/50 hover:bg-[#121f29] shadow-[inset_0_2px_4px_rgba(255,255,255,0.12),0_15px_45px_rgba(0,0,0,0.55)] ${tab.glow} hover:-translate-y-2 group relative overflow-hidden min-h-[425px] cursor-pointer`}
+                    className={`flex flex-col items-stretch justify-between text-left gap-5 p-6 rounded-[2.5rem] transition-all duration-500 bg-gradient-to-b from-[#1b2f3d]/95 via-[#101d26]/98 to-[#0a1118]/100 border border-white/20 hover:border-cyan-400/50 hover:bg-[#121f29] shadow-[inset_0_2px_4px_rgba(255,255,255,0.12),0_15px_45px_rgba(0,0,0,0.55)] ${tab.glow} hover:-translate-y-2 group relative overflow-hidden min-h-0 md:min-h-[425px] cursor-pointer`}
                   >
                     {/* Top glass highlight layer for high fidelity 3D physical capsule reflection */}
                     <div className="absolute top-0 inset-x-0 h-36 bg-gradient-to-b from-white/10 to-transparent rounded-t-[2.5rem] pointer-events-none" />
@@ -966,7 +969,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
           <>
             {/* Analysis Detail View */}
             {/* Context Header with Navigation */}
-            <div className={`bg-slate-50 border-b border-slate-200 px-10 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 sticky top-0 z-30 backdrop-blur-sm bg-slate-50/90 print:hidden ${isPrintingReport ? 'print:hidden' : ''}`}>
+            <div className={`bg-slate-50 border-b border-slate-200 px-4 md:px-10 py-4 md:py-6 flex flex-col sm:flex-row justify-between items-center gap-4 sticky top-0 z-30 backdrop-blur-sm bg-slate-50/90 print:hidden ${isPrintingReport ? 'print:hidden' : ''}`}>
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => setViewMode('hub')}
@@ -1002,7 +1005,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
               </div>
             </div>
 
-            <div className="p-10">
+            <div className="p-4 md:p-10">
               {/* Content Area */}
               <div className="max-w-4xl mx-auto">
                 <div className="space-y-12">
@@ -1553,7 +1556,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                       const buyerContracts = BUYER_CONTRACTS_CARRIAGE.includes(code);
                       const tip = pinTooltip(info.sellerCarbonControl);
                       return (
-                    <section className="bg-emerald-50/40 border border-emerald-100/80 rounded-[2.5rem] p-8 md:p-10 shadow-sm space-y-8 relative overflow-hidden text-slate-900 animate-fade-in">
+                    <section className="bg-emerald-50/40 border border-emerald-100/80 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-sm space-y-8 relative overflow-hidden text-slate-900 animate-fade-in">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.02] rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
                         
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-emerald-100 pb-6 relative z-10">
@@ -1683,8 +1686,8 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                       {/* Typical data access per party */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                         {/* Seller card */}
-                        <div className="bg-white/90 border border-emerald-100 p-8 rounded-3xl space-y-4 shadow-sm flex flex-col hover:bg-white transition-all">
-                          <div className="flex justify-between items-start gap-3">
+                        <div className="bg-white/90 border border-emerald-100 p-5 md:p-8 rounded-3xl space-y-4 shadow-sm flex flex-col hover:bg-white transition-all">
+                          <div className="flex flex-wrap justify-between items-start gap-3">
                             <span className="text-[11px] font-black uppercase tracking-widest text-emerald-800 bg-emerald-50 border border-emerald-100/50 px-2.5 py-1 rounded-lg whitespace-nowrap">
                               Seller Scope (Typical)
                             </span>
@@ -1729,8 +1732,8 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                         </div>
 
                         {/* Buyer card */}
-                        <div className="bg-white/90 border border-orange-100 p-8 rounded-3xl space-y-4 shadow-sm flex flex-col hover:bg-white transition-all">
-                          <div className="flex justify-between items-start gap-3">
+                        <div className="bg-white/90 border border-orange-100 p-5 md:p-8 rounded-3xl space-y-4 shadow-sm flex flex-col hover:bg-white transition-all">
+                          <div className="flex flex-wrap justify-between items-start gap-3">
                             <span className="text-[11px] font-black uppercase tracking-widest text-orange-800 bg-orange-50 border border-orange-100/50 px-2.5 py-1 rounded-lg whitespace-nowrap">
                               Buyer Scope (Typical)
                             </span>
@@ -1796,7 +1799,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                     {(() => {
                       const roadmap = getDataRoadmap(code, info.sellerCarbonControl);
                       return (
-                    <section className="bg-white border border-slate-200/80 rounded-[2.5rem] p-8 md:p-10 shadow-sm space-y-8 relative overflow-hidden text-slate-900 animate-fade-in">
+                    <section className="bg-white border border-slate-200/80 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-sm space-y-8 relative overflow-hidden text-slate-900 animate-fade-in">
                       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/[0.01] rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
                       
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-6 relative z-10">
@@ -1934,7 +1937,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                     })()}
 
                     {/* Section 3: Practical notes & greener alternatives */}
-                    <section className="bg-emerald-50/40 border border-emerald-100/80 rounded-[2.5rem] p-8 md:p-10 shadow-sm space-y-8 relative overflow-hidden text-slate-900 animate-fade-in">
+                    <section className="bg-emerald-50/40 border border-emerald-100/80 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-10 shadow-sm space-y-8 relative overflow-hidden text-slate-900 animate-fade-in">
                       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
                       
                       <div className="border-b border-emerald-100 pb-6 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -2062,7 +2065,7 @@ export default function ResultDisplay({ code, onReset }: ResultDisplayProps) {
                                        </span>
                                      </div>
 
-                                     <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-slate-50/10">
+                                     <div className="border border-slate-100 rounded-2xl overflow-x-auto shadow-sm bg-slate-50/10">
                                        <table className="w-full text-left border-collapse">
                                          <thead>
                                            <tr className="border-b border-slate-100 bg-slate-100/50">

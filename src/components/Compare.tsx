@@ -70,9 +70,13 @@ export default function Compare({ onReset }: CompareProps) {
             exit={{ opacity: 0, y: -20 }}
             className="overflow-x-auto pb-6 custom-scrollbar"
           >
-            <div className={`grid gap-6 min-w-[800px]`} style={{ gridTemplateColumns: `repeat(${selectedCodes.length}, minmax(0, 1fr))` }}>
+            <p className="md:hidden mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Swipe to compare →</p>
+            <div
+              className="flex md:grid gap-4 md:gap-6 snap-x snap-mandatory md:min-w-[800px] md:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
+              style={{ '--cols': selectedCodes.length } as React.CSSProperties}
+            >
               {selectedIncoterms.map((info) => (
-                <div key={info.code} className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm flex flex-col space-y-8 relative overflow-hidden group">
+                <div key={info.code} className="shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-start bg-white border border-slate-100 rounded-[2.5rem] p-6 md:p-8 shadow-sm flex flex-col space-y-8 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 transition-colors group-hover:bg-blue-50" />
                   
                   {/* Header */}

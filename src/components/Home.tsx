@@ -324,7 +324,7 @@ export default function Home({ onStartWizard, onStartCompare, onStartContract }:
                   className="rounded-[3rem] shadow-2xl skew-y-3 hover:skew-y-0 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute -bottom-10 -right-10 bg-white p-8 rounded-3xl shadow-xl space-y-4 max-w-[280px]">
+                <div className="absolute -bottom-10 right-4 md:-right-10 bg-white p-6 md:p-8 rounded-3xl shadow-xl space-y-4 max-w-[260px] md:max-w-[280px]">
                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
                         <Clock size={20} />
